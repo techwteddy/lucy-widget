@@ -1,3 +1,9 @@
+![Tests](https://img.shields.io/badge/tests-61%20passing-brightgreen)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
+![Claude](https://img.shields.io/badge/Claude-Sonnet-blueviolet)
+![CI](https://github.com/ChunkyTortoise/chatbot-widget/actions/workflows/ci.yml/badge.svg)
+
 # Chatbot Widget
 
 Add an AI-powered chat bubble to any website with a single script tag.
