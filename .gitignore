@@ -9,3 +9,4 @@ venv/
 *.db
 uploads/
 dashboard/node_modules/
+widget/node_modules/

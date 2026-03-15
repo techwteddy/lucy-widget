@@ -1,23 +1,41 @@
 from functools import lru_cache
+from google import genai
+from google.genai import types
 from api.config import settings
 
-MAX_CHARS = 2000  # ~512 tokens
+MAX_CHARS = 2000
+TASK_DOCUMENT = "RETRIEVAL_DOCUMENT"
+TASK_QUERY = "RETRIEVAL_QUERY"
+OUTPUT_DIM = 768
 
 
 @lru_cache(maxsize=1)
-def _get_model():
-    from sentence_transformers import SentenceTransformer
-    return SentenceTransformer(settings.embedding_model)
+def _get_client() -> genai.Client:
+    return genai.Client(api_key=settings.gemini_api_key)
 
 
-def embed(text: str) -> list[float]:
-    model = _get_model()
-    vector = model.encode(text[:MAX_CHARS], normalize_embeddings=True)
-    return vector.tolist()
+async def embed(text: str, task_type: str = TASK_QUERY) -> list[float]:
+    client = _get_client()
+    result = await client.aio.models.embed_content(
+        model=settings.embedding_model,
+        contents=[text[:MAX_CHARS]],
+        config=types.EmbedContentConfig(
+            task_type=task_type,
+            output_dimensionality=OUTPUT_DIM,
+        ),
+    )
+    return list(result.embeddings[0].values)
 
 
-def embed_batch(texts: list[str]) -> list[list[float]]:
-    model = _get_model()
+async def embed_batch(texts: list[str], task_type: str = TASK_DOCUMENT) -> list[list[float]]:
+    client = _get_client()
     truncated = [t[:MAX_CHARS] for t in texts]
-    vectors = model.encode(truncated, normalize_embeddings=True, batch_size=32)
-    return [v.tolist() for v in vectors]
+    result = await client.aio.models.embed_content(
+        model=settings.embedding_model,
+        contents=truncated,
+        config=types.EmbedContentConfig(
+            task_type=task_type,
+            output_dimensionality=OUTPUT_DIM,
+        ),
+    )
+    return [list(e.values) for e in result.embeddings]

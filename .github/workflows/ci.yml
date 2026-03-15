@@ -37,7 +37,7 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pip install ruff pytest pytest-asyncio pytest-cov
       - name: Lint
-        run: ruff check api/ tests/ --ignore E501 || true
+        run: ruff check api/ tests/ --ignore E501
       - name: Test
         env:
           DATABASE_URL: postgresql+asyncpg://testuser:testpass@localhost:5432/testdb
@@ -48,4 +48,14 @@ jobs:
           STRIPE_SECRET_KEY: sk_test_placeholder
           STRIPE_WEBHOOK_SECRET: whsec_placeholder
           SECRET_KEY: test-secret-key-for-jwt-signing-here
-        run: pytest tests/ -q --tb=short
+        run: pytest tests/ -q --tb=short --cov=api --cov-report=term-missing
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Test dashboard
+        run: |
+          cd dashboard
+          npm ci
+          npm test

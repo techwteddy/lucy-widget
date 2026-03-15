@@ -5,18 +5,25 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 @pytest.fixture
 def mock_embed():
-    """Returns a fixed 384-dim vector."""
-    with patch("api.services.embedder.embed") as m:
-        m.return_value = [0.1] * 384
-        yield m
+    """Returns a fixed 768-dim vector (async)."""
+    with patch("api.services.embedder.embed", new_callable=AsyncMock) as m1, \
+         patch("api.services.chat_service.embed", new_callable=AsyncMock) as m2:
+        m1.return_value = [0.1] * 768
+        m2.return_value = [0.1] * 768
+        yield m1
 
 
 @pytest.fixture
 def mock_embed_batch():
-    """Returns fixed 384-dim vectors for a batch."""
-    with patch("api.services.embedder.embed_batch") as m:
-        m.side_effect = lambda texts: [[0.1] * 384 for _ in texts]
-        yield m
+    """Returns fixed 768-dim vectors for a batch (async)."""
+    async def _batch(texts, **kwargs):
+        return [[0.1] * 768 for _ in texts]
+
+    with patch("api.services.embedder.embed_batch", new_callable=AsyncMock) as m1, \
+         patch("api.services.doc_processor.embed_batch", new_callable=AsyncMock) as m2:
+        m1.side_effect = _batch
+        m2.side_effect = _batch
+        yield m1
 
 
 @pytest.fixture
@@ -57,6 +64,9 @@ def mock_redis():
     """Async mock Redis client."""
     r = AsyncMock()
     r.ping = AsyncMock()
+    r.incr = AsyncMock(return_value=1)
+    r.expire = AsyncMock()
+    r.ttl = AsyncMock(return_value=60)
     return r
 
 

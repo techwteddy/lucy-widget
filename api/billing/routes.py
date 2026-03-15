@@ -1,11 +1,16 @@
+import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from pydantic import BaseModel
 from api.auth.middleware import get_current_user, CurrentUser
-from api.dependencies import get_redis
+from api.dependencies import get_redis, get_db
 from .stripe_client import get_stripe, PLANS
 from api.config import settings
 import redis.asyncio as aioredis
 import stripe as _stripe
+from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
@@ -16,11 +21,36 @@ class CheckoutRequest(BaseModel):
     cancel_url: str
 
 
+class BillingStatusResponse(BaseModel):
+    plan: str
+    messages_used: int
+    messages_limit: int
+
+
+@router.get("/status", response_model=BillingStatusResponse)
+async def billing_status(
+    user: CurrentUser = Depends(get_current_user),
+    redis_client: aioredis.Redis = Depends(get_redis),
+):
+    from .quota import get_user_plan, get_message_count, get_plan_limit
+
+    plan_tier = await get_user_plan(redis_client, user.email)
+    messages_used = await get_message_count(redis_client, user.email)
+    messages_limit = get_plan_limit(plan_tier)
+    return BillingStatusResponse(
+        plan=plan_tier,
+        messages_used=messages_used,
+        messages_limit=messages_limit,
+    )
+
+
 @router.post("/checkout")
 async def create_checkout(
     body: CheckoutRequest,
     user: CurrentUser = Depends(get_current_user),
 ):
+    if settings.demo_mode:
+        return {"checkout_url": "https://example.com/demo-checkout"}
     s = get_stripe()
     plan = PLANS.get(body.plan)
     if not plan or not plan["price_id"]:
@@ -41,6 +71,8 @@ async def billing_portal(
     body: dict,
     user: CurrentUser = Depends(get_current_user),
 ):
+    if settings.demo_mode:
+        return {"portal_url": "https://example.com/demo-portal"}
     s = get_stripe()
     customers = s.Customer.list(email=user.email, limit=1)
     if not customers.data:
@@ -59,7 +91,7 @@ PLAN_TIER_MAP = {
 
 
 async def _handle_subscription_upsert(
-    subscription: dict, redis_client: aioredis.Redis
+    subscription: dict, redis_client: aioredis.Redis, db: AsyncSession | None = None
 ) -> None:
     """Handle subscription.created and subscription.updated events."""
     customer_id = subscription["customer"]
@@ -83,6 +115,49 @@ async def _handle_subscription_upsert(
         )
         await redis_client.expire(f"subscription:{customer_id}", 86400 * 30)
 
+        # Store plan by customer email for quota lookups
+        customer_email = None
+        try:
+            s = get_stripe()
+            customer = s.Customer.retrieve(customer_id)
+            if customer.email:
+                customer_email = customer.email
+                await redis_client.set(f"plan:{customer.email}", plan)
+        except Exception:
+            pass  # Non-critical — quota falls back to free
+
+        # Dual-write to Postgres (best-effort)
+        if db and customer_email:
+            try:
+                from sqlalchemy import select
+                from api.models.subscription import Subscription
+
+                result = await db.execute(
+                    select(Subscription).where(
+                        Subscription.stripe_subscription_id == subscription["id"]
+                    )
+                )
+                existing = result.scalar_one_or_none()
+                if existing:
+                    existing.plan_tier = plan
+                    existing.status = status
+                    existing.stripe_customer_id = customer_id
+                else:
+                    import uuid
+                    new_sub = Subscription(
+                        id=uuid.uuid4(),
+                        user_email=customer_email,
+                        stripe_customer_id=customer_id,
+                        stripe_subscription_id=subscription["id"],
+                        plan_tier=plan,
+                        status=status,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                    db.add(new_sub)
+                await db.commit()
+            except Exception:
+                logger.warning("Dual-write to Postgres failed for subscription %s", subscription["id"], exc_info=True)
+
 
 async def _handle_subscription_deleted(
     subscription: dict, redis_client: aioredis.Redis
@@ -97,12 +172,22 @@ async def _handle_subscription_deleted(
         },
     )
 
+    # Reset email-based plan key for quota
+    try:
+        s = get_stripe()
+        customer = s.Customer.retrieve(customer_id)
+        if customer.email:
+            await redis_client.set(f"plan:{customer.email}", "free")
+    except Exception:
+        pass
+
 
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
     stripe_signature: str = Header(..., alias="stripe-signature"),
     redis_client: aioredis.Redis = Depends(get_redis),
+    db: AsyncSession = Depends(get_db),
 ):
     payload = await request.body()
     try:
@@ -118,7 +203,7 @@ async def stripe_webhook(
         "customer.subscription.created",
         "customer.subscription.updated",
     ):
-        await _handle_subscription_upsert(subscription, redis_client)
+        await _handle_subscription_upsert(subscription, redis_client, db)
     elif event["type"] == "customer.subscription.deleted":
         await _handle_subscription_deleted(subscription, redis_client)
 

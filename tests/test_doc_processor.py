@@ -95,7 +95,7 @@ async def test_process_document_sets_failed_on_error():
     mock_db.commit = AsyncMock()
     mock_db.rollback = AsyncMock()
 
-    with patch("api.services.doc_processor.embed_batch", side_effect=RuntimeError("embed error")):
+    with patch("api.services.doc_processor.embed_batch", new_callable=AsyncMock, side_effect=RuntimeError("embed error")):
         from api.services.doc_processor import process_document
         await process_document(doc_id, mock_db)
 

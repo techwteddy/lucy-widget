@@ -13,7 +13,7 @@ class DocumentChunk(Base, UUIDMixin, TimestampMixin):
     chatbot_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("chatbots.id", ondelete="CASCADE"), nullable=False)
     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
-    embedding: Mapped[list[float]] = mapped_column(Vector(384), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(768), nullable=True)
 
     doc: Mapped["KnowledgeDoc"] = relationship(back_populates="chunks")
 

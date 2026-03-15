@@ -29,7 +29,7 @@ async def process_document(doc_id: uuid.UUID, db: AsyncSession) -> None:
         if not chunks:
             chunks = [doc.content_text[:2000]]
 
-        embeddings = embed_batch(chunks)
+        embeddings = await embed_batch(chunks)
 
         from datetime import datetime, timezone
         now = datetime.now(timezone.utc)

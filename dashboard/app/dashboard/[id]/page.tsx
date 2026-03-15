@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, MessageCircle, Save } from 'lucide-react'
+import { FileText, MessageCircle, Save, BarChart3, MessagesSquare, TrendingUp } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { EmbedSnippet } from '@/components/EmbedSnippet'
-import type { Chatbot } from '@/lib/types'
+import type { Chatbot, Analytics } from '@/lib/types'
 
 export default function ChatbotDetailPage() {
   const params = useParams()
@@ -18,6 +18,8 @@ export default function ChatbotDetailPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  const [analytics, setAnalytics] = useState<Analytics | null>(null)
 
   // Editable fields
   const [name, setName] = useState('')
@@ -49,6 +51,10 @@ export default function ChatbotDetailPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load chatbot'))
       .finally(() => setLoading(false))
+
+    apiFetch<Analytics>(`/api/v1/chatbots/${chatbotId}/analytics`)
+      .then(setAnalytics)
+      .catch(() => {})
   }, [chatbotId, router])
 
   async function handleSave(e: React.FormEvent) {
@@ -115,6 +121,33 @@ export default function ChatbotDetailPage() {
           </Link>
         </div>
       </div>
+
+      {/* Analytics cards */}
+      {analytics && (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-xs font-medium uppercase tracking-wide">Conversations</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{analytics.total_conversations}</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <MessagesSquare className="h-4 w-4" />
+              <span className="text-xs font-medium uppercase tracking-wide">Messages</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{analytics.total_messages}</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs font-medium uppercase tracking-wide">Avg / Conv</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{analytics.avg_messages_per_conversation}</p>
+          </div>
+        </div>
+      )}
 
       {/* Embed snippet */}
       <div className="mb-8">

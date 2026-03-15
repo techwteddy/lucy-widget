@@ -38,6 +38,7 @@
   let reconnectDelay = 1000;
   let isOpen = false;
   let currentBotMessage = null;
+  let currentBotText = '';
   let welcomeShown = false;
   let heartbeatInterval = null;
 
@@ -160,6 +161,17 @@
       border-bottom-left-radius: 4px;
     }
 
+    .msg.bot strong { font-weight: 600; }
+    .msg.bot em { font-style: italic; }
+    .msg.bot code {
+      background: #e2e8f0; padding: 1px 5px; border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.9em;
+    }
+    .msg.bot a { color: ${PRIMARY_COLOR}; text-decoration: underline; }
+    .msg.bot a:hover { opacity: 0.8; }
+    .msg.bot ul { margin: 4px 0; padding-left: 18px; list-style: disc; }
+    .msg.bot li { margin: 2px 0; }
+
     .typing-indicator {
       display: flex;
       gap: 4px;
@@ -241,6 +253,78 @@
       .bubble { bottom: 16px; right: 16px; }
     }
   `;
+
+  /**
+   * Parse inline markdown into a DocumentFragment using safe DOM construction.
+   * Only used for bot messages. User messages stay as textContent.
+   */
+  function parseMarkdown(text) {
+    var frag = document.createDocumentFragment();
+    var lines = text.split('\n');
+    var listItems = [];
+
+    function flushList() {
+      if (listItems.length === 0) return;
+      var ul = document.createElement('ul');
+      for (var i = 0; i < listItems.length; i++) {
+        var li = document.createElement('li');
+        appendInline(li, listItems[i]);
+        ul.appendChild(li);
+      }
+      frag.appendChild(ul);
+      listItems = [];
+    }
+
+    function appendInline(parent, str) {
+      // Pattern matches: **bold**, *italic*, `code`, [text](url)
+      var re = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[([^\]]+)\]\((https?:\/\/[^)]+)\))/g;
+      var last = 0;
+      var match;
+      while ((match = re.exec(str)) !== null) {
+        if (match.index > last) {
+          parent.appendChild(document.createTextNode(str.slice(last, match.index)));
+        }
+        var el;
+        if (match[2] !== undefined) {
+          el = document.createElement('strong');
+          el.textContent = match[2];
+        } else if (match[3] !== undefined) {
+          el = document.createElement('em');
+          el.textContent = match[3];
+        } else if (match[4] !== undefined) {
+          el = document.createElement('code');
+          el.textContent = match[4];
+        } else if (match[5] !== undefined && match[6] !== undefined) {
+          el = document.createElement('a');
+          el.textContent = match[5];
+          el.href = match[6];
+          el.target = '_blank';
+          el.rel = 'noopener noreferrer';
+        }
+        parent.appendChild(el);
+        last = re.lastIndex;
+      }
+      if (last < str.length) {
+        parent.appendChild(document.createTextNode(str.slice(last)));
+      }
+    }
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var listMatch = line.match(/^[\-\*] (.+)/);
+      if (listMatch) {
+        listItems.push(listMatch[1]);
+      } else {
+        flushList();
+        if (i > 0) {
+          frag.appendChild(document.createElement('br'));
+        }
+        appendInline(frag, line);
+      }
+    }
+    flushList();
+    return frag;
+  }
 
   // SVG icons
   var CHAT_ICON = '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>';
@@ -327,7 +411,11 @@
     function addMessage(role, content) {
       var el = document.createElement('div');
       el.className = 'msg ' + role;
-      el.textContent = content;
+      if (role === 'bot' && content) {
+        el.appendChild(parseMarkdown(content));
+      } else {
+        el.textContent = content;
+      }
       messages.appendChild(el);
       messages.scrollTop = messages.scrollHeight;
       return el;
@@ -417,12 +505,16 @@
 
           if (data.type === 'start') {
             removeTyping();
+            currentBotText = '';
             currentBotMessage = addMessage('bot', '');
           } else if (data.type === 'token' && currentBotMessage) {
-            currentBotMessage.textContent += data.content;
+            currentBotText += data.content;
+            currentBotMessage.innerHTML = '';
+            currentBotMessage.appendChild(parseMarkdown(currentBotText));
             messages.scrollTop = messages.scrollHeight;
           } else if (data.type === 'end') {
             currentBotMessage = null;
+            currentBotText = '';
             sendBtn.disabled = false;
             input.disabled = false;
             input.focus();

@@ -1,109 +1,242 @@
-![Tests](https://img.shields.io/badge/tests-61%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-71%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000)
 ![Claude](https://img.shields.io/badge/Claude-Sonnet-blueviolet)
 ![CI](https://github.com/ChunkyTortoise/chatbot-widget/actions/workflows/ci.yml/badge.svg)
 
-# Chatbot Widget
+# Chatbot Widget SaaS
 
-Add an AI-powered chat bubble to any website with a single script tag.
+Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowledge base, analytics, and a Next.js 15 dashboard. Drop a single `<script>` tag on any website and get a streaming AI chat widget backed by Claude, pgvector retrieval, and Stripe subscriptions.
 
 ```html
-<script src="https://chatbot-widget-api.onrender.com/widget/chatbot.min.js"
+<script src="https://your-api.com/widget/chatbot.min.js"
         data-chatbot-id="YOUR_CHATBOT_ID"
         data-api-key="YOUR_API_KEY"
         data-primary-color="#3B82F6"
         data-title="Chat with us"></script>
 ```
 
-## Features
+---
 
-- **Drop-in embed** — one script tag, zero dependencies, no framework required
-- **Streaming responses** — token-by-token output via WebSocket
-- **RAG knowledge base** — upload PDFs/text docs, chatbot answers from them
-- **Shadow DOM isolation** — no CSS conflicts with the host page
-- **Customizable** — colors, position, title, welcome message
-- **Mobile responsive** — full-screen on mobile, floating on desktop
-- **Session persistence** — conversation continues on page refresh
+## Architecture
 
-## Stack
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        End User's Website                       │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  Widget (Shadow DOM, ~14KB, vanilla JS, zero dependencies)│  │
+│  │  WebSocket streaming  ·  session persistence  ·  mobile   │  │
+│  └──────────────────────────────┬────────────────────────────┘  │
+└─────────────────────────────────┼───────────────────────────────┘
+                                  │ WS / REST
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     FastAPI Backend (Python)                     │
+│                                                                 │
+│  Auth (Supabase JWT)  ·  Billing (Stripe)  ·  Quota Enforcement │
+│  RAG Pipeline: chunk → embed → retrieve → Claude LLM            │
+│                                                                 │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐          │
+│  │PostgreSQL│  │  Redis   │  │  pgvector (768-dim)   │          │
+│  │ chatbots │  │ sessions │  │  document embeddings  │          │
+│  │ convos   │  │ quotas   │  │  Gemini Embedding      │          │
+│  │ messages │  │ plans    │  │                        │          │
+│  └──────────┘  └──────────┘  └──────────────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                                  ▲
+                                  │ Supabase JWT
+┌─────────────────────────────────────────────────────────────────┐
+│              Next.js 15 Dashboard (TypeScript)                  │
+│  Supabase Auth  ·  Chatbot CRUD  ·  Analytics  ·  Conversations │
+│  Billing Portal  ·  Tailwind CSS  ·  Vitest                    │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-- **Backend**: FastAPI + PostgreSQL (pgvector) + Redis
-- **LLM**: Claude claude-sonnet-4-6 (Anthropic)
-- **Embeddings**: sentence-transformers `all-MiniLM-L6-v2` (384-dim)
-- **Widget**: Vanilla JS, Shadow DOM, ~14KB
-- **Admin**: Streamlit dashboard
-- **Deploy**: Render
+## Tech Stack
 
-## API
+| Layer | Technology |
+|-------|-----------|
+| **API** | FastAPI, Python 3.12+, async SQLAlchemy, Pydantic v2 |
+| **LLM** | Claude Sonnet (Anthropic) |
+| **Embeddings** | Gemini Embedding via `google-genai` (768-dim) |
+| **Vector Store** | pgvector on PostgreSQL 16 |
+| **Cache / State** | Redis 7 (sessions, quotas, subscription state) |
+| **Auth** | Supabase JWT (signup/login/me) |
+| **Billing** | Stripe Checkout + Customer Portal + Webhooks |
+| **Dashboard** | Next.js 15, TypeScript, Tailwind CSS, Supabase JS |
+| **Widget** | Vanilla JS, Shadow DOM isolation, ~14KB minified |
+| **CI** | GitHub Actions |
+
+## API Reference
+
+### Health
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/health` | — | Health check |
-| `POST` | `/api/v1/chatbots` | Admin key | Create chatbot, returns API key |
-| `GET` | `/api/v1/chatbots/{id}` | Admin key | Get chatbot config |
-| `PUT` | `/api/v1/chatbots/{id}` | Admin key | Update chatbot |
-| `DELETE` | `/api/v1/chatbots/{id}` | Admin key | Soft delete |
-| `GET` | `/api/v1/chatbots/{id}/widget-config` | — | Public display config |
-| `POST` | `/api/v1/chatbots/{id}/documents` | Admin key | Upload PDF/TXT to knowledge base |
-| `GET` | `/api/v1/chatbots/{id}/documents` | Admin key | List knowledge base docs |
-| `POST` | `/api/v1/chat/{id}` | — | REST chat (non-streaming) |
-| `WS` | `/ws/chat/{id}` | — | WebSocket streaming chat |
-| `GET` | `/widget/chatbot.min.js` | — | Serve widget script |
+| `GET` | `/health` | -- | Health check (db + redis status) |
 
-## Local Development
+### Auth
 
-```bash
-# Start Postgres + Redis
-docker-compose up -d
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/auth/signup` | -- | Create account (Supabase), returns JWT |
+| `POST` | `/auth/login` | -- | Login, returns JWT |
+| `GET` | `/auth/me` | Bearer JWT | Current user info |
 
-# Install dependencies
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+### Chatbots
 
-# Copy env
-cp .env.example .env
-# Edit .env: set ANTHROPIC_API_KEY
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/v1/chatbots` | Bearer JWT | List user's chatbots |
+| `POST` | `/api/v1/chatbots` | `X-Admin-Key` | Create chatbot (admin) |
+| `POST` | `/api/v1/chatbots/me` | Bearer JWT | Create chatbot (user) |
+| `GET` | `/api/v1/chatbots/{id}` | `X-Admin-Key` | Get chatbot details |
+| `PUT` | `/api/v1/chatbots/{id}` | `X-Admin-Key` | Update chatbot |
+| `DELETE` | `/api/v1/chatbots/{id}` | `X-Admin-Key` | Soft-delete chatbot |
+| `GET` | `/api/v1/chatbots/{id}/widget-config` | -- | Public widget display config |
 
-# Start API
-uvicorn api.main:app --reload
+### Documents (RAG Knowledge Base)
 
-# Start admin dashboard (separate terminal)
-streamlit run admin/app.py
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/chatbots/{id}/documents` | `X-Admin-Key` | Upload PDF/TXT (max 10MB) |
+| `GET` | `/api/v1/chatbots/{id}/documents` | `X-Admin-Key` | List knowledge base docs |
+| `DELETE` | `/api/v1/chatbots/{id}/documents/{doc_id}` | `X-Admin-Key` | Delete document + chunks |
 
-Visit `http://localhost:8000/widget/demo` to see the widget.
+### Chat
 
-## Tests
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/chat/{id}` | API key (optional) | REST chat (non-streaming) |
+| `WS` | `/ws/chat/{id}?session_id=&api_key=` | API key (optional) | WebSocket streaming chat |
 
-```bash
-pytest tests/ -v
-```
+### Analytics
 
-38 tests covering: chunker, embedder, doc processor, chatbot CRUD, chat service, WebSocket.
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/v1/chatbots/{id}/analytics` | Bearer JWT | Message count, conversation count, avg messages |
+| `GET` | `/api/v1/chatbots/{id}/conversations` | Bearer JWT | Recent conversations (paginated) |
 
-## Deploy to Render
+### Billing
 
-1. Connect this repo to Render
-2. Use `render.yaml` — it provisions API, Postgres, and Redis automatically
-3. Set `ANTHROPIC_API_KEY` in Render dashboard environment variables
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/billing/checkout` | Bearer JWT | Create Stripe Checkout session |
+| `POST` | `/billing/portal` | Bearer JWT | Open Stripe Customer Portal |
+| `POST` | `/billing/webhook` | Stripe signature | Handle subscription lifecycle events |
+
+### Widget
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/widget/chatbot.js` | -- | Serve widget source |
+| `GET` | `/widget/chatbot.min.js` | -- | Serve minified widget |
+| `GET` | `/widget/demo` | -- | Interactive widget demo page |
+
+## Plan Tiers
+
+| | **Free** | **Pro** ($49/mo) | **Business** ($149/mo) |
+|---|---------|-----------------|----------------------|
+| Messages/month | 100 | 5,000 | 50,000 |
+| Chatbots | 1 | 5 | Unlimited |
+| Knowledge base | 10MB | 500MB | Unlimited |
+| Analytics | Basic | Full | Full + export |
+| Support | Community | Email | Priority |
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `DATABASE_URL` | Yes | PostgreSQL connection string (`postgresql+asyncpg://...`) |
 | `REDIS_URL` | Yes | Redis connection string |
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key |
-| `ADMIN_KEY` | Yes | Protects management endpoints |
-| `SECRET_KEY` | Yes | App secret (auto-generated on Render) |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for Claude |
+| `ADMIN_KEY` | Yes | Protects admin management endpoints (`X-Admin-Key` header) |
+| `SECRET_KEY` | Yes | Application secret key |
+| `SUPABASE_URL` | Yes* | Supabase project URL (required for auth) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes* | Supabase service role key (required for auth) |
+| `SUPABASE_JWT_SECRET` | Yes* | JWT secret for token verification (required for auth) |
+| `STRIPE_SECRET_KEY` | Yes* | Stripe secret key (required for billing) |
+| `STRIPE_WEBHOOK_SECRET` | Yes* | Stripe webhook signing secret (required for billing) |
+| `STRIPE_PRO_PRICE_ID` | No | Stripe Price ID for Pro plan |
+| `STRIPE_BUSINESS_PRICE_ID` | No | Stripe Price ID for Business plan |
 
-## Widget Options
+*Required for production. API runs without these in development mode.
+
+## Self-Hosting
+
+```bash
+git clone https://github.com/ChunkyTortoise/chatbot-widget.git
+cd chatbot-widget
+cp .env.example .env
+# Edit .env with your credentials
+
+docker-compose up -d
+```
+
+This starts PostgreSQL 16 (with pgvector), Redis 7, and the FastAPI API on port 8000.
+
+## Development Setup
+
+### API (Python)
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Start infrastructure
+docker-compose up -d db redis
+
+# Run API
+uvicorn api.main:app --reload
+```
+
+### Dashboard (Next.js 15)
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+### Widget
+
+```bash
+# Build minified widget
+make widget
+# Output: widget/dist/chatbot.min.js
+```
+
+Visit `http://localhost:8000/widget/demo` to see the widget in action.
+
+## Tests
+
+```bash
+# Python (65 tests)
+pytest tests/ -v
+
+# Dashboard TypeScript (6 tests)
+cd dashboard && npm test
+
+# Total: 71 tests
+```
+
+## Widget Embed Options
 
 | Attribute | Default | Description |
 |-----------|---------|-------------|
-| `data-chatbot-id` | required | Chatbot UUID from API |
-| `data-api-key` | optional | API key for authenticated access |
+| `data-chatbot-id` | *required* | Chatbot UUID from API |
+| `data-api-key` | -- | API key for authenticated access |
 | `data-position` | `bottom-right` | `bottom-right` or `bottom-left` |
 | `data-primary-color` | `#3B82F6` | Hex color for bubble and header |
 | `data-title` | `Chat with us` | Header title text |
+
+## Deploy to Render
+
+1. Connect this repo to [Render](https://render.com)
+2. Use `render.yaml` -- provisions API, PostgreSQL, and Redis automatically
+3. Set environment variables in the Render dashboard
+
+## License
+
+MIT

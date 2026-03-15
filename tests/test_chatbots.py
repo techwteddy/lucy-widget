@@ -1,6 +1,20 @@
 import pytest
 import uuid
 from unittest.mock import MagicMock
+from datetime import datetime, timezone, timedelta
+from jose import jwt
+
+JWT_SECRET = "dev-jwt-secret"
+
+
+def _make_token(sub: str = "user-123", email: str = "owner@example.com", exp_delta: int = 3600) -> str:
+    payload = {
+        "sub": sub,
+        "email": email,
+        "role": "authenticated",
+        "exp": datetime.now(timezone.utc) + timedelta(seconds=exp_delta),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
 SAMPLE_CHATBOT = {
@@ -133,3 +147,133 @@ async def test_chatbot_update_no_fields_returns_400(client, admin_headers, chatb
         headers=admin_headers,
     )
     assert response.status_code == 400
+
+
+# ------------------------------------------------------------------
+# W1: JWT owner can PUT/DELETE their own chatbot
+# ------------------------------------------------------------------
+
+
+def _fake_chatbot(chatbot_id: uuid.UUID, owner_email: str = "owner@example.com") -> MagicMock:
+    bot = MagicMock()
+    bot.id = chatbot_id
+    bot.name = "My Bot"
+    bot.system_prompt = "Help."
+    bot.welcome_message = "Hi!"
+    bot.primary_color = "#3B82F6"
+    bot.position = "bottom-right"
+    bot.title = "Chat"
+    bot.owner_email = owner_email
+    bot.is_active = True
+    return bot
+
+
+@pytest.mark.asyncio
+async def test_jwt_owner_can_update_chatbot(client, mock_db):
+    """JWT owner should be able to PUT their own chatbot."""
+    cid = uuid.uuid4()
+    bot = _fake_chatbot(cid)
+
+    # get_admin_or_owner does a select to verify ownership — return the chatbot
+    # Then update_chatbot does two more selects (update + re-fetch)
+    mock_db.execute.return_value.scalar_one_or_none.return_value = bot
+    mock_db.execute.return_value.scalar_one.return_value = bot
+
+    token = _make_token(email="owner@example.com")
+    response = await client.put(
+        f"/api/v1/chatbots/{cid}",
+        json={"name": "Updated Bot"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_jwt_non_owner_cannot_update_chatbot(client, mock_db):
+    """JWT user who is NOT the owner should get 403."""
+    cid = uuid.uuid4()
+
+    # Ownership check returns None (not owner)
+    mock_db.execute.return_value.scalar_one_or_none.return_value = None
+
+    token = _make_token(email="hacker@example.com")
+    response = await client.put(
+        f"/api/v1/chatbots/{cid}",
+        json={"name": "Hacked Bot"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_jwt_owner_can_delete_chatbot(client, mock_db):
+    """JWT owner should be able to DELETE (soft-delete) their own chatbot."""
+    cid = uuid.uuid4()
+    bot = _fake_chatbot(cid)
+    mock_db.execute.return_value.scalar_one_or_none.return_value = bot
+
+    token = _make_token(email="owner@example.com")
+    response = await client.delete(
+        f"/api/v1/chatbots/{cid}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_jwt_non_owner_cannot_delete_chatbot(client, mock_db):
+    """JWT user who is NOT the owner should get 403 on DELETE."""
+    cid = uuid.uuid4()
+    mock_db.execute.return_value.scalar_one_or_none.return_value = None
+
+    token = _make_token(email="hacker@example.com")
+    response = await client.delete(
+        f"/api/v1/chatbots/{cid}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_key_still_works_for_update(client, mock_db, admin_headers):
+    """Admin key should still grant access to PUT."""
+    cid = uuid.uuid4()
+    bot = _fake_chatbot(cid)
+    mock_db.execute.return_value.scalar_one.return_value = bot
+
+    response = await client.put(
+        f"/api/v1/chatbots/{cid}",
+        json={"name": "Admin Updated"},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_key_still_works_for_delete(client, mock_db, admin_headers):
+    """Admin key should still grant access to DELETE."""
+    cid = uuid.uuid4()
+    response = await client.delete(
+        f"/api/v1/chatbots/{cid}",
+        headers=admin_headers,
+    )
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_no_auth_returns_401_for_update(client):
+    """No auth header at all should return 401."""
+    cid = uuid.uuid4()
+    response = await client.put(
+        f"/api/v1/chatbots/{cid}",
+        json={"name": "No Auth"},
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_no_auth_returns_401_for_delete(client):
+    """No auth header at all should return 401."""
+    cid = uuid.uuid4()
+    response = await client.delete(f"/api/v1/chatbots/{cid}")
+    assert response.status_code == 401

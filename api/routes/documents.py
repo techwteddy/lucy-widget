@@ -4,7 +4,8 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from api.dependencies import get_db, get_admin_key
+from api.dependencies import get_db, get_admin_or_owner
+from api.models.database import AsyncSessionLocal
 from api.models.knowledge_doc import KnowledgeDoc
 from api.models.document_chunk import DocumentChunk
 from api.schemas.chatbot import DocumentResponse
@@ -25,12 +26,23 @@ def _extract_text(content: bytes, filename: str) -> str:
     return content.decode("utf-8", errors="replace")
 
 
+async def _process_document_background(doc_id: uuid.UUID) -> None:
+    """Run document processing with its own DB session (not request-scoped)."""
+    async with AsyncSessionLocal() as session:
+        try:
+            await process_document(doc_id, session)
+        except Exception as e:
+            logger.error(f"Background doc processing failed for {doc_id}: {e}", exc_info=True)
+        finally:
+            await session.close()
+
+
 @router.post("/chatbots/{chatbot_id}/documents", response_model=DocumentResponse)
 async def upload_document(
     chatbot_id: uuid.UUID,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_admin_key),
+    _: str = Depends(get_admin_or_owner),
 ):
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
@@ -56,8 +68,8 @@ async def upload_document(
     await db.commit()
     await db.refresh(doc)
 
-    # Process in background
-    asyncio.create_task(process_document(doc.id, db))
+    # Process in background with its own session
+    asyncio.create_task(_process_document_background(doc.id))
 
     return doc
 
@@ -66,7 +78,7 @@ async def upload_document(
 async def list_documents(
     chatbot_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_admin_key),
+    _: str = Depends(get_admin_or_owner),
 ):
     result = await db.execute(
         select(KnowledgeDoc)
@@ -81,7 +93,7 @@ async def delete_document(
     chatbot_id: uuid.UUID,
     doc_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_admin_key),
+    _: str = Depends(get_admin_or_owner),
 ):
     await db.execute(delete(DocumentChunk).where(DocumentChunk.doc_id == doc_id))
     await db.execute(

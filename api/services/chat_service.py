@@ -57,6 +57,15 @@ async def save_message(conversation_id: uuid.UUID, role: str, content: str, db: 
         created_at=datetime.now(timezone.utc),
     )
     db.add(msg)
+
+    # Increment conversation message_count
+    result = await db.execute(
+        select(Conversation).where(Conversation.id == conversation_id)
+    )
+    conv = result.scalar_one_or_none()
+    if conv:
+        conv.message_count = (conv.message_count or 0) + 1
+
     await db.commit()
     return msg
 
@@ -84,7 +93,7 @@ async def stream_response(
     # Build RAG context
     context_text = ""
     try:
-        query_embedding = embed(user_message)
+        query_embedding = await embed(user_message)
         chunks = await similarity_search(query_embedding, chatbot_id, settings.retrieval_top_k, db)
         if chunks:
             context_parts = [row.chunk_text for row, _ in chunks]
@@ -120,7 +129,7 @@ async def stream_response(
                 yield token
     except Exception as e:
         logger.error(f"Claude streaming error: {e}")
-        yield f"\n\n[Error: {e}]"
+        yield "\n\n[Error: An error occurred while generating a response]"
 
     # Save assistant response
     await save_message(conv.id, "assistant", full_response, db)

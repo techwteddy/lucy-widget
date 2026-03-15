@@ -132,6 +132,155 @@ class TestChatService:
         assert "Error" in "".join(tokens)
 
 
+class TestQuotaEnforcement:
+    @pytest.mark.asyncio
+    async def test_rest_chat_returns_429_when_quota_exceeded(self, client, mock_db, mock_redis):
+        """REST chat returns 429 when owner's monthly quota is exceeded."""
+        chatbot_id = uuid.uuid4()
+
+        fake_chatbot = MagicMock()
+        fake_chatbot.id = chatbot_id
+        fake_chatbot.system_prompt = "You are helpful."
+        fake_chatbot.is_active = True
+        fake_chatbot.owner_email = "owner@example.com"
+        fake_chatbot.api_key_hash = "abc"
+
+        result_mock = MagicMock()
+        result_mock.scalar_one_or_none.return_value = fake_chatbot
+        mock_db.execute.return_value = result_mock
+
+        # Simulate: plan is "free" and quota already at limit (100)
+        async def fake_redis_get(key):
+            if key.startswith("plan:"):
+                return "free"
+            if key.startswith("quota:"):
+                return "100"  # at limit
+            return None
+
+        mock_redis.get = AsyncMock(side_effect=fake_redis_get)
+
+        response = await client.post(
+            f"/api/v1/chat/{chatbot_id}",
+            json={"message": "Hello", "session_id": "test-session"},
+        )
+        assert response.status_code == 429
+        assert "quota" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_rest_chat_increments_quota_on_success(self, client, mock_db, mock_redis, mock_anthropic, mock_embed):
+        """After successful chat, quota counter is incremented."""
+        chatbot_id = uuid.uuid4()
+
+        fake_chatbot = MagicMock()
+        fake_chatbot.id = chatbot_id
+        fake_chatbot.system_prompt = "You are helpful."
+        fake_chatbot.is_active = True
+        fake_chatbot.owner_email = "owner@example.com"
+        fake_chatbot.api_key_hash = "abc"
+
+        fake_conv = MagicMock()
+        fake_conv.id = uuid.uuid4()
+        fake_conv.message_count = 0
+
+        call_count = 0
+
+        def execute_side_effect(*args, **kwargs):
+            nonlocal call_count
+            result = MagicMock()
+            if call_count == 0:
+                # First call in chat_rest: chatbot lookup
+                result.scalar_one_or_none.return_value = fake_chatbot
+            elif call_count == 1:
+                # stream_response: chatbot lookup
+                result.scalar_one_or_none.return_value = fake_chatbot
+            elif call_count == 2:
+                # get_or_create_conversation inside stream_response
+                result.scalar_one_or_none.return_value = None
+            else:
+                # history + save_message lookups
+                result.scalar_one_or_none.return_value = fake_conv
+                result.scalars.return_value.all.return_value = []
+            call_count += 1
+            return result
+
+        mock_db.execute = AsyncMock(side_effect=execute_side_effect)
+
+        async def fake_refresh(obj):
+            obj.id = fake_conv.id
+
+        mock_db.refresh = AsyncMock(side_effect=fake_refresh)
+
+        # Quota: plan free, count at 0 (well under limit)
+        async def fake_redis_get(key):
+            if key.startswith("plan:"):
+                return "free"
+            if key.startswith("quota:"):
+                return "0"
+            return None
+
+        mock_redis.get = AsyncMock(side_effect=fake_redis_get)
+        mock_redis.incr = AsyncMock(return_value=1)
+        mock_redis.expire = AsyncMock()
+
+        with patch("api.services.chat_service.similarity_search", return_value=[]):
+            response = await client.post(
+                f"/api/v1/chat/{chatbot_id}",
+                json={"message": "Hello", "session_id": "test-session"},
+            )
+
+        # Verify incr was called on the quota key
+        assert mock_redis.incr.called
+        incr_key = mock_redis.incr.call_args[0][0]
+        assert incr_key.startswith("quota:owner@example.com:")
+
+
+class TestMessageCount:
+    @pytest.mark.asyncio
+    async def test_save_message_increments_conversation_message_count(self):
+        """save_message increments conversation.message_count."""
+        conv_id = uuid.uuid4()
+        mock_db = AsyncMock()
+
+        fake_conv = MagicMock()
+        fake_conv.id = conv_id
+        fake_conv.message_count = 5
+
+        result_mock = MagicMock()
+        result_mock.scalar_one_or_none.return_value = fake_conv
+        mock_db.execute = AsyncMock(return_value=result_mock)
+        mock_db.add = MagicMock()
+        mock_db.commit = AsyncMock()
+
+        from api.services.chat_service import save_message
+
+        await save_message(conv_id, "user", "Hello", mock_db)
+
+        assert fake_conv.message_count == 6
+        mock_db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_save_message_handles_none_message_count(self):
+        """save_message handles None message_count gracefully."""
+        conv_id = uuid.uuid4()
+        mock_db = AsyncMock()
+
+        fake_conv = MagicMock()
+        fake_conv.id = conv_id
+        fake_conv.message_count = None
+
+        result_mock = MagicMock()
+        result_mock.scalar_one_or_none.return_value = fake_conv
+        mock_db.execute = AsyncMock(return_value=result_mock)
+        mock_db.add = MagicMock()
+        mock_db.commit = AsyncMock()
+
+        from api.services.chat_service import save_message
+
+        await save_message(conv_id, "user", "Hello", mock_db)
+
+        assert fake_conv.message_count == 1
+
+
 class TestGetOrCreateConversation:
     @pytest.mark.asyncio
     async def test_creates_new_conversation_when_none_exists(self):

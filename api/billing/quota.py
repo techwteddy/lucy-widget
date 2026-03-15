@@ -40,3 +40,9 @@ async def check_quota(redis, user_email: str, plan_tier: str) -> bool:
     if limit == -1:
         return True
     return count < limit
+
+
+async def get_user_plan(redis, user_email: str) -> str:
+    """Look up plan tier by user email. Defaults to 'free' if not found."""
+    plan = await redis.get(f"plan:{user_email}")
+    return plan if plan else "free"

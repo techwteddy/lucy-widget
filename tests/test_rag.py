@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 
 class TestChunker:
@@ -47,43 +47,52 @@ class TestChunker:
 
 
 class TestEmbedder:
-    def test_embed_returns_list_of_floats(self):
-        with patch("api.services.embedder._get_model") as mock_model:
-            import numpy as np
-            mock_instance = MagicMock()
-            mock_instance.encode.return_value = np.array([0.1] * 384)
-            mock_model.return_value = mock_instance
+    @pytest.mark.asyncio
+    async def test_embed_returns_list_of_floats(self):
+        mock_client = MagicMock()
+        mock_embedding = MagicMock()
+        mock_embedding.values = [0.1] * 768
+        mock_result = MagicMock()
+        mock_result.embeddings = [mock_embedding]
+        mock_client.aio.models.embed_content = AsyncMock(return_value=mock_result)
 
+        with patch("api.services.embedder._get_client", return_value=mock_client):
             from api.services.embedder import embed
-            result = embed("test text")
+            result = await embed("test text")
             assert isinstance(result, list)
-            assert len(result) == 384
+            assert len(result) == 768
             assert all(isinstance(v, float) for v in result)
 
-    def test_embed_batch_returns_correct_count(self):
-        with patch("api.services.embedder._get_model") as mock_model:
-            import numpy as np
-            mock_instance = MagicMock()
-            mock_instance.encode.return_value = np.array([[0.1] * 384, [0.2] * 384, [0.3] * 384])
-            mock_model.return_value = mock_instance
+    @pytest.mark.asyncio
+    async def test_embed_batch_returns_correct_count(self):
+        mock_client = MagicMock()
+        mock_embeddings = [MagicMock() for _ in range(3)]
+        for i, e in enumerate(mock_embeddings):
+            e.values = [float(i) / 10] * 768
+        mock_result = MagicMock()
+        mock_result.embeddings = mock_embeddings
+        mock_client.aio.models.embed_content = AsyncMock(return_value=mock_result)
 
+        with patch("api.services.embedder._get_client", return_value=mock_client):
             from api.services.embedder import embed_batch
-            result = embed_batch(["a", "b", "c"])
+            result = await embed_batch(["a", "b", "c"])
             assert len(result) == 3
-            assert all(len(v) == 384 for v in result)
+            assert all(len(v) == 768 for v in result)
 
-    def test_embed_truncates_long_text(self):
-        with patch("api.services.embedder._get_model") as mock_model:
-            import numpy as np
-            mock_instance = MagicMock()
-            mock_instance.encode.return_value = np.array([0.1] * 384)
-            mock_model.return_value = mock_instance
+    @pytest.mark.asyncio
+    async def test_embed_truncates_long_text(self):
+        mock_client = MagicMock()
+        mock_embedding = MagicMock()
+        mock_embedding.values = [0.1] * 768
+        mock_result = MagicMock()
+        mock_result.embeddings = [mock_embedding]
+        mock_client.aio.models.embed_content = AsyncMock(return_value=mock_result)
 
+        with patch("api.services.embedder._get_client", return_value=mock_client):
             from api.services.embedder import embed, MAX_CHARS
             long_text = "x" * (MAX_CHARS + 1000)
-            embed(long_text)
+            await embed(long_text)
 
-            # Verify the text was truncated before being passed to encode
-            call_args = mock_instance.encode.call_args
-            passed_text = call_args[0][0]
-            assert len(passed_text) <= MAX_CHARS
+            call_kwargs = mock_client.aio.models.embed_content.call_args
+            passed_contents = call_kwargs.kwargs.get("contents") or call_kwargs[1].get("contents") or call_kwargs[0][1]
+            assert len(passed_contents[0]) <= MAX_CHARS

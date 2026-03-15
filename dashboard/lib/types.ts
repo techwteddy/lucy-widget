@@ -28,3 +28,30 @@ export interface AuthResponse {
   user_id: string
   email: string
 }
+
+export interface Conversation {
+  id: string
+  session_id: string
+  message_count: number
+  created_at: string
+}
+
+export interface ConversationMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+export interface Analytics {
+  chatbot_id: string
+  total_conversations: number
+  total_messages: number
+  avg_messages_per_conversation: number
+}
+
+export interface BillingStatus {
+  plan: string
+  messages_used: number
+  messages_limit: number
+}

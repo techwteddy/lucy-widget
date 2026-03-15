@@ -44,9 +44,15 @@ def _decode_token(token: str) -> CurrentUser:
     return CurrentUser(sub=sub, email=email, role=role)
 
 
+DEMO_USER = CurrentUser(sub="demo-user-id", email="demo@example.com", role="authenticated")
+
+
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> CurrentUser:
+    if settings.demo_mode:
+        if not credentials or credentials.credentials == "demo-token":
+            return DEMO_USER
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

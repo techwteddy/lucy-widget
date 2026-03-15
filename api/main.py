@@ -3,6 +3,8 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from api.config import settings
 from api.models.database import engine
 from api.models.base import Base
 from api.routes import api_router
@@ -15,8 +17,12 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Chatbot Widget API...")
     async with engine.begin() as conn:
         # Ensure pgvector extension exists (handled by migration in prod)
-        await conn.execute(__import__("sqlalchemy", fromlist=["text"]).text("CREATE EXTENSION IF NOT EXISTS vector"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
+    if settings.demo_mode:
+        from api.seed import seed_demo_data
+        logger.info("DEMO_MODE enabled — seeding demo data...")
+        await seed_demo_data()
     logger.info("Ready.")
     yield
     logger.info("Shutting down...")

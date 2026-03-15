@@ -64,3 +64,14 @@ async def login(body: AuthRequest):
 @router.get("/me")
 async def me(user: CurrentUser = Depends(get_current_user)):
     return {"sub": user.sub, "email": user.email, "role": user.role}
+
+
+@router.post("/demo-login", response_model=AuthResponse)
+async def demo_login():
+    if not settings.demo_mode:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    return AuthResponse(
+        access_token="demo-token",
+        user_id="demo-user-id",
+        email="demo@example.com",
+    )

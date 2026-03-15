@@ -226,3 +226,95 @@ async def test_handle_subscription_trialing_sets_plan():
     call_mapping = redis.hset.call_args[1]["mapping"]
     assert call_mapping["plan"] == "business"
     assert call_mapping["status"] == "trialing"
+
+
+# ------------------------------------------------------------------
+# Integration: GET /billing/status
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_billing_status_requires_auth(client):
+    resp = await client.get("/billing/status")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_billing_status_returns_plan_info(client, mock_redis):
+    token = _make_token(email="owner@example.com")
+
+    async def fake_redis_get(key):
+        if key.startswith("plan:"):
+            return "pro"
+        if key.startswith("quota:"):
+            return "42"
+        return None
+
+    mock_redis.get = AsyncMock(side_effect=fake_redis_get)
+
+    resp = await client.get(
+        "/billing/status",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["plan"] == "pro"
+    assert data["messages_used"] == 42
+    assert data["messages_limit"] == 5000
+
+
+@pytest.mark.asyncio
+async def test_billing_status_defaults_to_free(client, mock_redis):
+    token = _make_token(email="new@example.com")
+
+    mock_redis.get = AsyncMock(return_value=None)
+
+    resp = await client.get(
+        "/billing/status",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["plan"] == "free"
+    assert data["messages_used"] == 0
+    assert data["messages_limit"] == 100
+
+
+# ------------------------------------------------------------------
+# Unit: rate limiting
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_rate_limit_allows_under_limit():
+    from api.routes.chat import _check_rate_limit
+
+    redis = AsyncMock()
+    redis.incr = AsyncMock(return_value=5)
+    redis.expire = AsyncMock()
+
+    result = await _check_rate_limit(redis, "session-abc")
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_blocks_over_limit():
+    from api.routes.chat import _check_rate_limit
+
+    redis = AsyncMock()
+    redis.incr = AsyncMock(return_value=11)
+    redis.ttl = AsyncMock(return_value=45)
+
+    result = await _check_rate_limit(redis, "session-abc")
+    assert result == 45
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_sets_expire_on_first_call():
+    from api.routes.chat import _check_rate_limit
+
+    redis = AsyncMock()
+    redis.incr = AsyncMock(return_value=1)
+    redis.expire = AsyncMock()
+
+    result = await _check_rate_limit(redis, "session-abc")
+    assert result is None
+    redis.expire.assert_called_once_with("rate:session-abc", 60)

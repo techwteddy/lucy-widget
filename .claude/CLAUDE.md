@@ -1,7 +1,7 @@
 # chatbot-widget
 
 ## Stack
-- **Backend**: FastAPI + PostgreSQL/pgvector + Redis + Claude claude-sonnet-4-6 + sentence-transformers
+- **Backend**: FastAPI + PostgreSQL/pgvector + Redis + Claude claude-sonnet-4-6 + google-genai (Gemini Embedding)
 - **Frontend**: Vanilla JS widget (Shadow DOM, no framework)
 - **Admin**: Streamlit
 - **Deploy**: Render (chatbot-widget-api.onrender.com)
