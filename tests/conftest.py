@@ -2,6 +2,12 @@ import pytest
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from api.config import settings
+
+# Ensure tests always use the dev JWT secret regardless of .env
+settings.supabase_jwt_secret = "dev-jwt-secret"
+settings.admin_key = "dev-admin-key"
+
 
 @pytest.fixture
 def mock_embed():

@@ -1,4 +1,4 @@
-![Tests](https://img.shields.io/badge/tests-71%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-128%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
 ![Next.js](https://img.shields.io/badge/Next.js-15-000000)
@@ -212,13 +212,13 @@ Visit `http://localhost:8000/widget/demo` to see the widget in action.
 ## Tests
 
 ```bash
-# Python (65 tests)
+# Python (119 tests)
 pytest tests/ -v
 
-# Dashboard TypeScript (6 tests)
+# Dashboard TypeScript (9 tests)
 cd dashboard && npm test
 
-# Total: 71 tests
+# Total: 128 tests
 ```
 
 ## Widget Embed Options

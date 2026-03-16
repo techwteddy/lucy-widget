@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { FileText, MessageCircle, Save, BarChart3, MessagesSquare, TrendingUp } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { EmbedSnippet } from '@/components/EmbedSnippet'
+import { TimeseriesChart } from '@/components/TimeseriesChart'
 import type { Chatbot, Analytics } from '@/lib/types'
 
 export default function ChatbotDetailPage() {
@@ -148,6 +149,11 @@ export default function ChatbotDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Timeseries chart */}
+      <div className="mb-8">
+        <TimeseriesChart chatbotId={chatbotId} />
+      </div>
 
       {/* Embed snippet */}
       <div className="mb-8">

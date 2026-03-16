@@ -4,12 +4,14 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from api.dependencies import get_db, get_admin_or_owner
+from api.dependencies import get_db, get_admin_or_owner, get_redis
 from api.models.database import AsyncSessionLocal
 from api.models.knowledge_doc import KnowledgeDoc
 from api.models.document_chunk import DocumentChunk
 from api.schemas.chatbot import DocumentResponse
 from api.services.doc_processor import process_document
+from api.billing.kb_quota import check_knowledge_base_quota
+from api.billing.quota import get_user_plan
 from datetime import datetime, timezone
 
 router = APIRouter()
@@ -42,8 +44,18 @@ async def upload_document(
     chatbot_id: uuid.UUID,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_admin_or_owner),
+    redis=Depends(get_redis),
+    owner: str = Depends(get_admin_or_owner),
 ):
+    # Check knowledge base quota
+    plan = await get_user_plan(redis, owner) if "@" in owner else "business"
+    quota = await check_knowledge_base_quota(chatbot_id, db, plan)
+    if not quota.allowed:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Knowledge base limit reached ({quota.current_bytes // (1024*1024)}MB / {quota.limit_bytes // (1024*1024)}MB). Upgrade your plan.",
+        )
+
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail="File too large (max 10MB)")
