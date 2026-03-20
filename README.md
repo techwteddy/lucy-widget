@@ -4,6 +4,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16.2-000000)
 ![Claude](https://img.shields.io/badge/Claude-Sonnet-blueviolet)
 ![CI](https://github.com/ChunkyTortoise/chatbot-widget/actions/workflows/ci.yml/badge.svg)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen)](https://dashboard-mu-two-10.vercel.app)
 
 # Chatbot Widget SaaS
 
@@ -178,8 +179,14 @@ The embeddable chat widget uses Shadow DOM for complete isolation:
 
 ## Live Demo
 
+- **Dashboard**: [dashboard-mu-two-10.vercel.app](https://dashboard-mu-two-10.vercel.app) — "Try Demo" button on the login page (no account needed)
 - **Widget demo page**: `GET /demo` — portfolio-quality showcase with live widget, copy-paste embed snippet, and cold-start indicator
-- **Admin dashboard**: Next.js dashboard with demo login (no Supabase account needed when `NEXT_PUBLIC_DEMO_MODE=true`)
+
+### Dashboard Login (with demo button)
+![Dashboard Login](docs/screenshots/dashboard-login.png)
+
+### Demo Page
+![Demo Page](docs/screenshots/demo-page.png)
 
 Run locally:
 ```bash
