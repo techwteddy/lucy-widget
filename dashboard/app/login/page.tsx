@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
   const [isSignup, setIsSignup] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -32,6 +33,24 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : 'Authentication failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDemoLogin() {
+    setError('')
+    setDemoLoading(true)
+
+    try {
+      const data = await apiFetch<AuthResponse>('/auth/demo-login', {
+        method: 'POST',
+      })
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('user_email', data.email)
+      router.push('/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Demo login failed')
+    } finally {
+      setDemoLoading(false)
     }
   }
 
@@ -89,6 +108,16 @@ export default function LoginPage() {
             {loading ? 'Please wait...' : isSignup ? 'Create account' : 'Log in'}
           </button>
         </form>
+
+        {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+          <button
+            onClick={handleDemoLogin}
+            disabled={demoLoading}
+            className="w-full mt-3 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
+          >
+            {demoLoading ? 'Please wait...' : 'Try Demo (no account needed)'}
+          </button>
+        )}
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}

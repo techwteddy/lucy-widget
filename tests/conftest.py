@@ -106,3 +106,106 @@ def admin_headers():
 @pytest.fixture
 def chatbot_id():
     return str(uuid.uuid4())
+
+
+@pytest.fixture
+async def demo_client(mock_redis):
+    """Test client with DEMO_MODE enabled and demo chatbot in mock DB."""
+    from httpx import AsyncClient, ASGITransport
+    from api.main import app
+    from api.dependencies import get_db, get_redis
+    from api.config import settings
+    from api.seed import DEMO_CHATBOT_NAME, DEMO_OWNER_EMAIL
+    from api.models.chatbot import Chatbot
+    from api.models.conversation import Conversation
+    from datetime import datetime, timezone
+    import hashlib
+
+    # Enable demo mode
+    original_demo_mode = settings.demo_mode
+    settings.demo_mode = True
+
+    # Create a demo chatbot for the mock DB to return
+    demo_chatbot_id = uuid.uuid4()
+    demo_chatbot = Chatbot(
+        id=demo_chatbot_id,
+        name=DEMO_CHATBOT_NAME,
+        owner_email=DEMO_OWNER_EMAIL,
+        system_prompt="Demo prompt",
+        welcome_message="Hello!",
+        api_key_hash=hashlib.sha256(b"demo_key").hexdigest(),
+        is_active=True,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    # Create a demo conversation
+    demo_conversation = Conversation(
+        id=uuid.uuid4(),
+        chatbot_id=demo_chatbot_id,
+        session_id="test-session",
+        created_at=datetime.now(timezone.utc),
+        message_count=0,
+    )
+
+    # Create a mock DB session that returns appropriate objects
+    mock_db = AsyncMock()
+    
+    def make_result(obj):
+        """Create a mock result that returns the given object."""
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = obj
+        result.scalar_one.return_value = obj
+        result.scalars.return_value.all.return_value = [obj] if obj else []
+        return result
+
+    async def mock_execute(query):
+        """Return appropriate mock data based on query type."""
+        # Check the entity being selected by examining column_descriptions
+        # SQLAlchemy queries have column_descriptions that tell us the table
+        try:
+            # For SELECT queries, check the entity
+            if hasattr(query, 'column_descriptions') and query.column_descriptions:
+                entity = query.column_descriptions[0].get('entity')
+                entity_name = entity.__name__ if entity and hasattr(entity, '__name__') else str(entity)
+                
+                if 'Chatbot' in entity_name:
+                    return make_result(demo_chatbot)
+                elif 'Conversation' in entity_name:
+                    return make_result(demo_conversation)
+        except Exception:
+            pass
+        
+        # Fallback: check string representation
+        query_str = str(query)
+        if "chatbot" in query_str.lower() and "conversation" not in query_str.lower():
+            return make_result(demo_chatbot)
+        elif "conversation" in query_str.lower():
+            return make_result(demo_conversation)
+        
+        return make_result(None)
+    
+    mock_db.execute = mock_execute
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    async def override_get_db():
+        yield mock_db
+
+    async def override_get_redis():
+        return mock_redis
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_redis] = override_get_redis
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c
+
+    app.dependency_overrides.clear()
+    settings.demo_mode = original_demo_mode
+
+
+@pytest.fixture
+def demo_chatbot_id():
+    """Return the string 'demo' for demo chatbot ID resolution tests."""
+    return "demo"

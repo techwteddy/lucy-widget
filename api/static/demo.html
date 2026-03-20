@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot Widget — Embed AI Chat on Any Website</title>
+    <meta name="description"
+        content="Add an AI-powered chat widget to your website in 60 seconds. RAG knowledge base, streaming responses, zero CSS conflicts." />
+    <style>
+        :root {
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --bg: #f8fafc;
+            --bg-dark: #0f172a;
+            --bg-dark-end: #1e293b;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+            --success: #16a34a;
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* ── Header ────────────────────────────────── */
+        header {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-end) 100%);
+            color: #fff;
+            padding: 3.5rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.03em;
+        }
+
+        header .tagline {
+            color: #94a3b8;
+            font-size: 1.15rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .header-badges {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(22, 163, 74, 0.15);
+            color: #4ade80;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .live-badge.hidden {
+            display: none;
+        }
+
+        .live-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: var(--bg-dark);
+        }
+
+        .btn-primary:hover {
+            background: #f1f5f9;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* ── Cold Start Banner ─────────────────────── */
+        #waking-banner {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #fde68a;
+        }
+
+        #waking-banner.hidden {
+            display: none;
+        }
+
+        #waking-banner .dismiss {
+            background: none;
+            border: none;
+            color: var(--warning-text);
+            font-size: 1.25rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 0.25rem;
+        }
+
+        /* ── Main Content ──────────────────────────── */
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Demo Section ──────────────────────────── */
+        .demo-area {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .demo-instructions {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 400px;
+        }
+
+        .demo-instructions strong {
+            color: var(--text);
+        }
+
+        .demo-arrow {
+            position: absolute;
+            bottom: 80px;
+            right: 40px;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* ── Snippet Section ───────────────────────── */
+        .snippet-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .snippet-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .snippet-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.25rem;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-block .tag {
+            color: #f472b6;
+        }
+
+        .code-block .attr {
+            color: #7dd3fc;
+        }
+
+        .code-block .value {
+            color: #a5f3fc;
+        }
+
+        .code-block .comment {
+            color: #64748b;
+        }
+
+        /* ── Features Grid ─────────────────────────── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+
+        .feature-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .feature-desc {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* ── Tech Stack ────────────────────────────── */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 1.5rem 0;
+        }
+
+        .tech-badge {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Footer CTA ────────────────────────────── */
+        .footer-cta {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: #fff;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-cta h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-cta p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-meta {
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer-meta a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Responsive ────────────────────────────── */
+        @media (max-width: 768px) {
+            header {
+                padding: 2.5rem 1.5rem 2rem;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            header .tagline {
+                font-size: 1rem;
+            }
+
+            main {
+                padding: 2rem 1.25rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-area {
+                min-height: 300px;
+                padding: 2rem 1.5rem;
+            }
+
+            .demo-arrow {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 2rem 1rem 1.75rem;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .code-block {
+                font-size: 0.75rem;
+                padding: 1rem;
+            }
+
+            .feature-card {
+                padding: 1.25rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-content">
+            <h1>🤖 Chatbot Widget</h1>
+            <p class="tagline">Embed AI chat on any website in 60 seconds</p>
+
+            <div class="header-badges">
+                <div id="live-badge" class="live-badge hidden">
+                    <span class="dot"></span>
+                    Live
+                </div>
+            </div>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/chunkytortoise/chatbot-widget" class="btn btn-primary" target="_blank"
+                    rel="noopener">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                    </svg>
+                    View on GitHub
+                </a>
+                <a href="https://github.com/chunkytortoise/chatbot-widget#readme" class="btn btn-secondary"
+                    target="_blank" rel="noopener">
+                    Get the Full Kit
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cold Start Banner -->
+    <div id="waking-banner" class="hidden">
+        <span>⏳ Waking up server… first response may take ~30s on free tier</span>
+        <button class="dismiss" onclick="dismissWakingBanner()" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <main>
+        <!-- Live Demo Section -->
+        <section id="demo-section">
+            <h2 class="section-title">Try the Widget</h2>
+            <p class="section-subtitle">Click the chat bubble in the bottom-right corner to start a conversation.</p>
+
+            <div class="demo-area">
+                <p class="demo-instructions">
+                    The chat bubble is in the <strong>bottom-right corner</strong> of this page.
+                    Click it to start a conversation with the demo assistant.
+                </p>
+                <span class="demo-arrow">↘</span>
+            </div>
+        </section>
+
+        <!-- Integration Snippet Section -->
+        <section id="snippet-section">
+            <h2 class="section-title">Add to Your Website</h2>
+            <p class="section-subtitle">Copy and paste this snippet before the closing <code></body></code> tag.</p>
+
+            <div class="snippet-card">
+                <div class="snippet-header">
+                    <h3>Embed Code</h3>
+                    <button id="copy-btn" class="copy-btn" onclick="copySnippet()" aria-label="Copy snippet">
+                        📋 Copy
+                    </button>
+                </div>
+                <pre class="code-block" id="embed-snippet"><span class="tag"><script</span>
+                    <span class="attr">src</span> =<span class="value">"<span id="api-url-placeholder">https://your-api.com</span>/widget/chatbot.min.js"</span>
+  <span class="attr">data-chatbot-id</span>=<span class="value">"YOUR_CHATBOT_ID"</span>
+  <span class="attr">data-api-key</span>=<span class="value">"YOUR_API_KEY"</span>
+  <span class="attr">data-primary-color</span>=<span class="value">"#3B82F6"</span>
+  <span class="attr">data-title</span>=<span class="value">"Chat with us"</span>
+<span class="tag">></script></span></pre>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features-section">
+            <h2 class="section-title">Features</h2>
+            <p class="section-subtitle">Everything you need to add AI chat to your website.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3 class="feature-title">RAG Knowledge Base</h3>
+                    <p class="feature-desc">Upload PDFs, docs, and FAQs to give your bot context. Answers are grounded
+                        in your content.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Streaming WebSocket Chat</h3>
+                    <p class="feature-desc">Real-time token-by-token responses for a smooth, modern chat experience.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">Shadow DOM Isolation</h3>
+                    <p class="feature-desc">Zero CSS conflicts. The widget is completely isolated from your page styles.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack Section -->
+        <section id="tech-section">
+            <h2 class="section-title" style="text-align: center;">Built With</h2>
+            <div class="tech-stack">
+                <span class="tech-badge">FastAPI</span>
+                <span class="tech-badge">Claude AI</span>
+                <span class="tech-badge">pgvector</span>
+                <span class="tech-badge">Next.js</span>
+                <span class="tech-badge">Stripe</span>
+                <span class="tech-badge">Supabase</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer CTA -->
+    <footer class="footer-cta">
+        <h2>Ready to Add AI Chat?</h2>
+        <p>Deploy your own chatbot widget in minutes.</p>
+
+        <div class="cta-buttons">
+            <a href="https://github.com/chunkytortoise/chatbot-widget" class="btn btn-primary" target="_blank"
+                rel="noopener">
+                View on GitHub
+            </a>
+            <a href="https://github.com/chunkytortoise/chatbot-widget#readme" class="btn btn-secondary" target="_blank"
+                rel="noopener">
+                Get the Full Kit
+            </a>
+        </div>
+
+        <p class="footer-meta">
+            MIT License · Built by <a href="https://github.com/chunkytortoise" target="_blank"
+                rel="noopener">ChunkyTortoise</a>
+        </p>
+    </footer>
+
+    <script>
+  // ─── State ────────────────────────────────────────────────────────────────
+  const state = {
+    healthChecked: false,
+    serverWaking: false,
+    snippetCopied: false
+  };
+
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Health check with 3s timeout
+    const healthTimeout = setTimeout(() => showWakingBanner(), 3000);
+    try {
+      const response = await fetch('/health');
+      if (response.ok) {
+        clearTimeout(healthTimeout);
+        state.healthChecked = true;
+        hideWakingBanner();
+        showLiveBadge();
+      }
+    } catch (e) {
+      // Server might be waking up - banner already shown
+      console.log('Health check failed:', e);
+    }
+
+    // 2. Inject widget with demo chatbot ID
+    injectWidget();
+    
+    // 3. Setup copy button
+    setupCopyButton();
+    
+    // 4. Update snippet with actual API URL
+    updateSnippetUrl();
+  });
+
+  // ─── Banner Functions ─────────────────────────────────────────────────────
+  function showWakingBanner() {
+    document.getElementById('waking-banner').classList.remove('hidden');
+    state.serverWaking = true;
+  }
+
+  function hideWakingBanner() {
+    document.getElementById('waking-banner').classList.add('hidden');
+    state.serverWaking = false;
+  }
+
+  function dismissWakingBanner() {
+    hideWakingBanner();
+  }
+
+  function showLiveBadge() {
+    document.getElementById('live-badge').classList.remove('hidden');
+  }
+
+  // ─── Widget Injection ─────────────────────────────────────────────────────
+  function injectWidget() {
+    const script = document.createElement('script');
+    script.src = '/widget/chatbot.min.js';
+    script.dataset.chatbotId = 'demo';  // Resolved by backend to demo chatbot
+    script.dataset.primaryColor = '#3B82F6';
+    script.dataset.title = 'Demo Assistant';
+    script.dataset.position = 'bottom-right';
+    document.body.appendChild(script);
+  }
+
+  // ─── Copy Snippet ─────────────────────────────────────────────────────────
+  function setupCopyButton() {
+    // Button already has onclick handler
+  }
+
+  async function copySnippet() {
+    const btn = document.getElementById('copy-btn');
+    const apiUrl = window.location.origin;
+    
+    const snippet = `<script
+  src="${apiUrl}/widget/chatbot.min.js"
+  data-chatbot-id="YOUR_CHATBOT_ID"
+  data-api-key="YOUR_API_KEY"
+  data-primary-color="#3B82F6"
+  data-title="Chat with us"
+><\/script>`;
+    
+    try {
+      await navigator.clipboard.writeText(snippet);
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch (e) {
+      console.error('Copy failed:', e);
+      btn.textContent = 'Copy failed';
+      setTimeout(() => {
+        btn.textContent = '📋 Copy';
+      }, 2000);
+    }
+  }
+
+  // ─── Update Snippet URL ───────────────────────────────────────────────────
+  function updateSnippetUrl() {
+    const placeholder = document.getElementById('api-url-placeholder');
+    if (placeholder) {
+      placeholder.textContent = window.location.origin;
+    }
+  }
+    </script>
+
+</body>
+
+</html>

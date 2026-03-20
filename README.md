@@ -1,7 +1,7 @@
-![Tests](https://img.shields.io/badge/tests-128%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-139%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
-![Next.js](https://img.shields.io/badge/Next.js-15-000000)
+![Next.js](https://img.shields.io/badge/Next.js-16.2-000000)
 ![Claude](https://img.shields.io/badge/Claude-Sonnet-blueviolet)
 ![CI](https://github.com/ChunkyTortoise/chatbot-widget/actions/workflows/ci.yml/badge.svg)
 
@@ -47,11 +47,19 @@ Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowl
                                   ▲
                                   │ Supabase JWT
 ┌─────────────────────────────────────────────────────────────────┐
-│              Next.js 15 Dashboard (TypeScript)                  │
+│              Next.js 16.2 Dashboard (TypeScript)                 │
 │  Supabase Auth  ·  Chatbot CRUD  ·  Analytics  ·  Conversations │
 │  Billing Portal  ·  Tailwind CSS  ·  Vitest                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### Shadow DOM Widget Isolation
+
+The embeddable chat widget uses Shadow DOM for complete isolation:
+- Zero CSS conflicts with the host page styles
+- ~14KB minified bundle with no framework dependency
+- Security boundary: widget DOM is inaccessible to host page scripts
+- Drop-in embed: `<script src="widget.js" data-chatbot-id="..."></script>`
 
 ## Tech Stack
 
@@ -64,7 +72,7 @@ Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowl
 | **Cache / State** | Redis 7 (sessions, quotas, subscription state) |
 | **Auth** | Supabase JWT (signup/login/me) |
 | **Billing** | Stripe Checkout + Customer Portal + Webhooks |
-| **Dashboard** | Next.js 15, TypeScript, Tailwind CSS, Supabase JS |
+| **Dashboard** | Next.js 16.2, TypeScript, Tailwind CSS, Supabase JS |
 | **Widget** | Vanilla JS, Shadow DOM isolation, ~14KB minified |
 | **CI** | GitHub Actions |
 
@@ -133,6 +141,8 @@ Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowl
 | `GET` | `/widget/chatbot.js` | -- | Serve widget source |
 | `GET` | `/widget/chatbot.min.js` | -- | Serve minified widget |
 | `GET` | `/widget/demo` | -- | Interactive widget demo page |
+| `GET` | `/demo` | -- | Portfolio-quality demo page with live widget embed |
+| `POST` | `/auth/demo-login` | -- | Demo login (returns `demo-token`; requires `DEMO_MODE=true`) |
 
 ## Plan Tiers
 
@@ -160,8 +170,22 @@ Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowl
 | `STRIPE_WEBHOOK_SECRET` | Yes* | Stripe webhook signing secret (required for billing) |
 | `STRIPE_PRO_PRICE_ID` | No | Stripe Price ID for Pro plan |
 | `STRIPE_BUSINESS_PRICE_ID` | No | Stripe Price ID for Business plan |
+| `DEMO_MODE` | No | Enable demo login + demo chatbot resolution (`true`/`false`, default `false`) |
+| `NEXT_PUBLIC_DEMO_MODE` | No | Show "Try Demo" button on dashboard login page (`true`/`false`) |
+| `NEXT_PUBLIC_API_URL` | No | Backend API URL for dashboard (defaults to `http://localhost:8000`) |
 
 *Required for production. API runs without these in development mode.
+
+## Live Demo
+
+- **Widget demo page**: `GET /demo` — portfolio-quality showcase with live widget, copy-paste embed snippet, and cold-start indicator
+- **Admin dashboard**: Next.js dashboard with demo login (no Supabase account needed when `NEXT_PUBLIC_DEMO_MODE=true`)
+
+Run locally:
+```bash
+DEMO_MODE=true uvicorn api.main:app --reload
+# then open http://localhost:8000/demo
+```
 
 ## Self-Hosting
 
@@ -191,7 +215,7 @@ docker-compose up -d db redis
 uvicorn api.main:app --reload
 ```
 
-### Dashboard (Next.js 15)
+### Dashboard (Next.js 16.2)
 
 ```bash
 cd dashboard
@@ -212,13 +236,13 @@ Visit `http://localhost:8000/widget/demo` to see the widget in action.
 ## Tests
 
 ```bash
-# Python (119 tests)
+# Python (130 tests)
 pytest tests/ -v
 
 # Dashboard TypeScript (9 tests)
 cd dashboard && npm test
 
-# Total: 128 tests
+# Total: 139 tests
 ```
 
 ## Widget Embed Options
@@ -236,6 +260,17 @@ cd dashboard && npm test
 1. Connect this repo to [Render](https://render.com)
 2. Use `render.yaml` -- provisions API, PostgreSQL, and Redis automatically
 3. Set environment variables in the Render dashboard
+
+## Certifications Applied
+
+Skills from completed certifications applied in this project:
+
+| Domain Pillar | Certifications | Applied In |
+|--------------|----------------|------------|
+| GenAI & LLM Engineering | Google Generative AI, Anthropic Prompt Engineering, DeepLearning.AI | Claude Haiku/Gemini Flash chat completion, KB semantic search |
+| RAG & Knowledge Systems | DeepLearning.AI RAG, LangChain & Vector DBs | pgvector semantic search, multi-tenant KB with quota enforcement |
+| Cloud & MLOps | Google Cloud, IBM DevOps, GitHub Actions | Render Blueprint deploy, Redis caching, CI coverage + security gates |
+| Deep Learning & AI Foundations | DeepLearning.AI specializations | Embedding model selection, vector similarity scoring |
 
 ## License
 

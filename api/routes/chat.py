@@ -10,12 +10,35 @@ from api.models.chatbot import Chatbot
 from api.schemas.chat import ChatRequest, ChatResponse
 from api.services.chat_service import stream_response, get_or_create_conversation
 from api.billing.quota import check_quota, increment_message_count, get_user_plan
+from api.config import settings
+from api.seed import DEMO_CHATBOT_NAME, DEMO_OWNER_EMAIL
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 RATE_LIMIT_MAX = 10
 RATE_LIMIT_WINDOW = 60
+
+
+async def _resolve_chatbot_id(chatbot_id: str, db: AsyncSession) -> uuid.UUID:
+    """Resolve chatbot_id string to UUID. Handles 'demo' as special case."""
+    if chatbot_id == "demo":
+        if not settings.demo_mode:
+            raise HTTPException(status_code=404, detail="Demo mode not enabled")
+        result = await db.execute(
+            select(Chatbot).where(
+                Chatbot.name == DEMO_CHATBOT_NAME,
+                Chatbot.owner_email == DEMO_OWNER_EMAIL,
+            )
+        )
+        demo_chatbot = result.scalar_one_or_none()
+        if not demo_chatbot:
+            raise HTTPException(status_code=404, detail="Demo chatbot not found")
+        return demo_chatbot.id
+    try:
+        return uuid.UUID(chatbot_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid chatbot ID format")
 
 
 async def _check_rate_limit(
@@ -34,14 +57,15 @@ async def _check_rate_limit(
 
 @router.post("/chat/{chatbot_id}", response_model=ChatResponse)
 async def chat_rest(
-    chatbot_id: uuid.UUID,
+    chatbot_id: str,
     request: ChatRequest,
     api_key: str | None = None,
     db: AsyncSession = Depends(get_db),
     redis_client: aioredis.Redis = Depends(get_redis),
 ):
     """Non-streaming REST chat endpoint."""
-    result = await db.execute(select(Chatbot).where(Chatbot.id == chatbot_id, Chatbot.is_active == True))
+    resolved_id = await _resolve_chatbot_id(chatbot_id, db)
+    result = await db.execute(select(Chatbot).where(Chatbot.id == resolved_id, Chatbot.is_active == True))
     chatbot = result.scalar_one_or_none()
     if not chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
@@ -67,14 +91,14 @@ async def chat_rest(
             raise HTTPException(status_code=429, detail="Monthly message quota exceeded")
 
     full_response = ""
-    async for token in stream_response(chatbot_id, request.session_id, request.message, db):
+    async for token in stream_response(resolved_id, request.session_id, request.message, db):
         full_response += token
 
     # Increment quota counter after successful response
     if owner_email:
         await increment_message_count(redis_client, owner_email)
 
-    conv = await get_or_create_conversation(chatbot_id, request.session_id, db)
+    conv = await get_or_create_conversation(resolved_id, request.session_id, db)
     return ChatResponse(
         response=full_response,
         session_id=request.session_id,
@@ -85,14 +109,21 @@ async def chat_rest(
 @router.websocket("/ws/chat/{chatbot_id}")
 async def chat_websocket(
     websocket: WebSocket,
-    chatbot_id: uuid.UUID,
+    chatbot_id: str,
     session_id: str = "default",
     api_key: str | None = None,
     db: AsyncSession = Depends(get_db),
     redis_client: aioredis.Redis = Depends(get_redis),
 ):
     """WebSocket streaming chat endpoint."""
-    result = await db.execute(select(Chatbot).where(Chatbot.id == chatbot_id, Chatbot.is_active == True))
+    # Resolve chatbot_id (handles "demo" string)
+    try:
+        resolved_id = await _resolve_chatbot_id(chatbot_id, db)
+    except HTTPException:
+        await websocket.close(code=4004)
+        return
+
+    result = await db.execute(select(Chatbot).where(Chatbot.id == resolved_id, Chatbot.is_active == True))
     chatbot = result.scalar_one_or_none()
 
     if not chatbot:
@@ -138,7 +169,7 @@ async def chat_websocket(
             await websocket.send_json({"type": "start"})
 
             try:
-                async for token in stream_response(chatbot_id, session_id, user_message, db):
+                async for token in stream_response(resolved_id, session_id, user_message, db):
                     await websocket.send_json({"type": "token", "content": token})
                 await websocket.send_json({"type": "end"})
 

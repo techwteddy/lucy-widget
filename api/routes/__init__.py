@@ -5,6 +5,7 @@ from .documents import router as documents_router
 from .chat import router as chat_router
 from .widget import router as widget_router
 from .analytics import router as analytics_router
+from .demo import router as demo_router
 from api.auth import auth_router
 from api.billing.routes import router as billing_router
 
@@ -17,3 +18,4 @@ api_router.include_router(documents_router, prefix="/api/v1", tags=["documents"]
 api_router.include_router(chat_router, prefix="/api/v1", tags=["chat"])
 api_router.include_router(analytics_router, prefix="/api/v1", tags=["analytics"])
 api_router.include_router(widget_router, tags=["widget"])
+api_router.include_router(demo_router, tags=["demo"])

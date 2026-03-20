@@ -17,12 +17,12 @@ async def test_rest_chat_chatbot_not_found(client, mock_db):
 
 @pytest.mark.asyncio
 async def test_rest_chat_requires_valid_chatbot_id(client):
-    """Invalid UUID returns 422."""
+    """Invalid UUID returns 400 (custom validation in _resolve_chatbot_id)."""
     response = await client.post(
         "/api/v1/chat/not-a-valid-uuid",
         json={"message": "Hello"},
     )
-    assert response.status_code == 422
+    assert response.status_code == 400
 
 
 @pytest.mark.asyncio

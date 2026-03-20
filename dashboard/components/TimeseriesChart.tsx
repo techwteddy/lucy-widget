@@ -58,8 +58,8 @@ export function TimeseriesChart({ chatbotId }: TimeseriesChartProps) {
           />
           <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
           <Tooltip
-            labelFormatter={(label: string) => `Date: ${label}`}
-            formatter={(value: number) => [value, 'Messages']}
+            labelFormatter={(label) => `Date: ${label}`}
+            formatter={(value) => [value, 'Messages']}
           />
           <Area
             type="monotone"

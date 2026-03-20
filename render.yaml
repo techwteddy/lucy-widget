@@ -20,12 +20,17 @@ services:
         generateValue: true
       - key: SECRET_KEY
         generateValue: true
+      - key: DEMO_MODE
+        value: true
+      - key: ENVIRONMENT
+        value: production
+
+  - type: redis
+    name: chatbot-widget-redis
+    plan: starter
+    ipAllowList: []
 
 databases:
   - name: chatbot-widget-db
     plan: starter
     postgresMajorVersion: 16
-
-  - name: chatbot-widget-redis
-    plan: starter
-    ipAllowList: []

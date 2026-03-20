@@ -38,6 +38,8 @@ jobs:
       - run: pip install ruff pytest pytest-asyncio pytest-cov
       - name: Lint
         run: ruff check api/ tests/ --ignore E501
+      - name: Type check
+        run: pip install mypy types-redis && mypy api/ --ignore-missing-imports
       - name: Test
         env:
           DATABASE_URL: postgresql+asyncpg://testuser:testpass@localhost:5432/testdb
@@ -48,7 +50,12 @@ jobs:
           STRIPE_SECRET_KEY: sk_test_placeholder
           STRIPE_WEBHOOK_SECRET: whsec_placeholder
           SECRET_KEY: test-secret-key-for-jwt-signing-here
-        run: pytest tests/ -q --tb=short --cov=api --cov-report=term-missing
+        run: pytest tests/ -q --tb=short --cov=api --cov-report=term-missing --cov-fail-under=80
+      - name: Security scan
+        run: |
+          pip install bandit pip-audit
+          bandit -r api/ -q -ll
+          pip-audit --strict --desc
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
