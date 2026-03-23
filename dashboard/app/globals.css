@@ -4,22 +4,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Brand: Indigo-based to match widget primary color #6366F1 */
+    --background: 226 32% 97%;
+    --foreground: 224 71% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --card-foreground: 224 71% 8%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 235 45% 93%;
+    --secondary-foreground: 224 71% 8%;
+    --muted: 235 30% 93%;
+    --muted-foreground: 220 14% 46%;
+    --accent: 235 45% 93%;
+    --accent-foreground: 224 71% 8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 232 25% 88%;
+    --input: 232 25% 88%;
+    --ring: 239 84% 67%;
+    --radius: 0.625rem;
   }
 }
 
@@ -30,4 +33,27 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    to right,
+    hsl(232 25% 90%) 8%,
+    hsl(232 25% 95%) 18%,
+    hsl(232 25% 90%) 33%
+  );
+  background-size: 800px 104px;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
 }
