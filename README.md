@@ -1,4 +1,4 @@
-![Tests](https://img.shields.io/badge/tests-139%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-148%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
 ![Next.js](https://img.shields.io/badge/Next.js-16.2-000000)
@@ -14,7 +14,7 @@ Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowl
 <script src="https://your-api.com/widget/chatbot.min.js"
         data-chatbot-id="YOUR_CHATBOT_ID"
         data-api-key="YOUR_API_KEY"
-        data-primary-color="#3B82F6"
+        data-primary-color="#2563EB"
         data-title="Chat with us"></script>
 ```
 
@@ -61,6 +61,17 @@ The embeddable chat widget uses Shadow DOM for complete isolation:
 - ~14KB minified bundle with no framework dependency
 - Security boundary: widget DOM is inaccessible to host page scripts
 - Drop-in embed: `<script src="widget.js" data-chatbot-id="..."></script>`
+
+## For Hiring Managers
+
+| If you're evaluating for... | Where to look | What it demonstrates |
+|-----------------------------|--------------|---------------------|
+| **Full-Stack AI / SaaS** | Widget embed ([`widget/src/chatbot.js`](widget/src/chatbot.js)), REST + WebSocket chat routes, Stripe billing | End-to-end product: embed script, auth, billing, RAG, analytics |
+| **RAG / Retrieval** | Embedder service ([`api/services/embedder.py`](api/services/embedder.py)), chunker, pgvector retrieval | Production RAG pipeline with Gemini embeddings + cosine similarity |
+| **Backend / API Design** | FastAPI app ([`api/main.py`](api/main.py)), async SQLAlchemy models, Redis session management | Clean async Python, Pydantic validation, WebSocket streaming |
+| **Frontend / Embeddable** | Shadow DOM widget ([`widget/src/chatbot.js`](widget/src/chatbot.js)) -- 14KB, zero dependencies, CSS isolation | Vanilla JS engineering without framework bloat |
+
+---
 
 ## Tech Stack
 
@@ -120,12 +131,31 @@ The embeddable chat widget uses Shadow DOM for complete isolation:
 | `POST` | `/api/v1/chat/{id}` | API key (optional) | REST chat (non-streaming) |
 | `WS` | `/ws/chat/{id}?session_id=&api_key=` | API key (optional) | WebSocket streaming chat |
 
+### Webhooks
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/chatbots/{id}/webhooks` | Bearer JWT | Register webhook endpoint (HMAC-signed delivery) |
+| `GET` | `/api/v1/chatbots/{id}/webhooks` | Bearer JWT | List webhook endpoints |
+| `DELETE` | `/api/v1/chatbots/{id}/webhooks/{wh_id}` | Bearer JWT | Delete webhook endpoint |
+| `GET` | `/api/v1/chatbots/{id}/webhooks/{wh_id}/deliveries` | Bearer JWT | View delivery history + dead-letter log |
+
+### Leads
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/chat/{id}/leads` | -- | Capture visitor lead (email, name) before chat |
+| `GET` | `/api/v1/chatbots/{id}/leads` | -- | List captured leads |
+
 ### Analytics
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | `GET` | `/api/v1/chatbots/{id}/analytics` | Bearer JWT | Message count, conversation count, avg messages |
-| `GET` | `/api/v1/chatbots/{id}/conversations` | Bearer JWT | Recent conversations (paginated) |
+| `GET` | `/api/v1/chatbots/{id}/analytics/performance` | Bearer JWT | Avg response time, escalation rate, unanswered rate |
+| `GET` | `/api/v1/chatbots/{id}/analytics/export` | Bearer JWT | Export conversations as CSV or JSON with date filtering |
+| `GET` | `/api/v1/chatbots/{id}/analytics/timeseries` | Bearer JWT | Daily message counts for last N days |
+| `GET` | `/api/v1/chatbots/{id}/conversations` | Bearer JWT | Recent conversations (filter by `needs_review`) |
 
 ### Billing
 
@@ -243,13 +273,13 @@ Visit `http://localhost:8000/widget/demo` to see the widget in action.
 ## Tests
 
 ```bash
-# Python (130 tests)
+# Python (139 tests)
 pytest tests/ -v
 
 # Dashboard TypeScript (9 tests)
 cd dashboard && npm test
 
-# Total: 139 tests
+# Total: 148 tests
 ```
 
 ## Widget Embed Options
@@ -259,7 +289,7 @@ cd dashboard && npm test
 | `data-chatbot-id` | *required* | Chatbot UUID from API |
 | `data-api-key` | -- | API key for authenticated access |
 | `data-position` | `bottom-right` | `bottom-right` or `bottom-left` |
-| `data-primary-color` | `#3B82F6` | Hex color for bubble and header |
+| `data-primary-color` | `#2563EB` | Hex color for bubble and header |
 | `data-title` | `Chat with us` | Header title text |
 
 ## Deploy to Render
