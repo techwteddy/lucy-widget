@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import type { BillingStatus } from '@/lib/types'
 
@@ -33,24 +32,17 @@ const PLANS = [
 ]
 
 export default function BillingPage() {
-  const router = useRouter()
   const [status, setStatus] = useState<BillingStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [upgrading, setUpgrading] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     apiFetch<BillingStatus>('/billing/status')
       .then(setStatus)
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load billing'))
       .finally(() => setLoading(false))
-  }, [router])
+  }, [])
 
   async function handleUpgrade(plan: string) {
     setUpgrading(plan)

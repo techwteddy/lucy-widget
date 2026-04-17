@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { apiFetch } from '@/lib/api'
@@ -10,23 +9,16 @@ import { ChatbotCard } from '@/components/ChatbotCard'
 import type { Chatbot } from '@/lib/types'
 
 export default function DashboardPage() {
-  const router = useRouter()
   const [chatbots, setChatbots] = useState<Chatbot[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     apiFetch<Chatbot[]>('/api/v1/chatbots')
       .then(setChatbots)
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load chatbots'))
       .finally(() => setLoading(false))
-  }, [router])
+  }, [])
 
   if (loading) {
     return (

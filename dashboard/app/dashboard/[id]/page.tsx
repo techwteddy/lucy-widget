@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { FileText, MessageCircle, Save, BarChart3, MessagesSquare, TrendingUp } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
@@ -11,7 +11,6 @@ import type { Chatbot, Analytics } from '@/lib/types'
 
 export default function ChatbotDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const chatbotId = params.id as string
 
   const [chatbot, setChatbot] = useState<Chatbot | null>(null)
@@ -30,12 +29,6 @@ export default function ChatbotDetailPage() {
   const [title, setTitle] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     apiFetch<Chatbot[]>('/api/v1/chatbots')
       .then((chatbots) => {
         const found = chatbots.find((c) => c.id === chatbotId)
@@ -56,7 +49,7 @@ export default function ChatbotDetailPage() {
     apiFetch<Analytics>(`/api/v1/chatbots/${chatbotId}/analytics`)
       .then(setAnalytics)
       .catch(() => {})
-  }, [chatbotId, router])
+  }, [chatbotId])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()

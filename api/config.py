@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 5
     chunk_size: int = 400
     chunk_overlap: int = 50
+    rag_low_confidence_threshold: float = 0.7
 
 
 settings = Settings()

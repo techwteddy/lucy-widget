@@ -1,10 +1,10 @@
-![Tests](https://img.shields.io/badge/tests-148%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-161%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
 ![Next.js](https://img.shields.io/badge/Next.js-16.2-000000)
 ![Claude](https://img.shields.io/badge/Claude-Sonnet-blueviolet)
 ![CI](https://github.com/ChunkyTortoise/chatbot-widget/actions/workflows/ci.yml/badge.svg)
-[![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen)](https://dashboard-mu-two-10.vercel.app)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen)](https://chatbot-widget-dashboard.vercel.app)
 
 # Chatbot Widget SaaS
 
@@ -22,37 +22,23 @@ Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowl
 
 ## Architecture
 
+```mermaid
+graph TB
+    Widget["Widget (Shadow DOM, 14KB, zero deps)"] -->|"WebSocket / REST"| API
+    Dashboard["Next.js 16.2 Dashboard"] -->|"Supabase JWT"| API
+
+    subgraph Backend["FastAPI Backend · Python 3.12"]
+        API["Auth (Supabase JWT) · Billing (Stripe) · Quota Enforcement"]
+        RAG["RAG Pipeline: chunk → embed → retrieve → Claude LLM"]
+        API --- RAG
+    end
+
+    RAG --> PG[("PostgreSQL 16 + pgvector\n768-dim Gemini Embeddings")]
+    RAG --> Redis[("Redis 7\nSessions · Quotas · Plans")]
+    RAG --> Claude["Claude Sonnet + Gemini Embedding API"]
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        End User's Website                       │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │  Widget (Shadow DOM, ~14KB, vanilla JS, zero dependencies)│  │
-│  │  WebSocket streaming  ·  session persistence  ·  mobile   │  │
-│  └──────────────────────────────┬────────────────────────────┘  │
-└─────────────────────────────────┼───────────────────────────────┘
-                                  │ WS / REST
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     FastAPI Backend (Python)                     │
-│                                                                 │
-│  Auth (Supabase JWT)  ·  Billing (Stripe)  ·  Quota Enforcement │
-│  RAG Pipeline: chunk → embed → retrieve → Claude LLM            │
-│                                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐          │
-│  │PostgreSQL│  │  Redis   │  │  pgvector (768-dim)   │          │
-│  │ chatbots │  │ sessions │  │  document embeddings  │          │
-│  │ convos   │  │ quotas   │  │  Gemini Embedding      │          │
-│  │ messages │  │ plans    │  │                        │          │
-│  └──────────┘  └──────────┘  └──────────────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                                  ▲
-                                  │ Supabase JWT
-┌─────────────────────────────────────────────────────────────────┐
-│              Next.js 16.2 Dashboard (TypeScript)                 │
-│  Supabase Auth  ·  Chatbot CRUD  ·  Analytics  ·  Conversations │
-│  Billing Portal  ·  Tailwind CSS  ·  Vitest                    │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+See [Architecture Decision Records](docs/adr/) for detailed rationale behind key technical choices.
 
 ### Shadow DOM Widget Isolation
 
@@ -61,6 +47,16 @@ The embeddable chat widget uses Shadow DOM for complete isolation:
 - ~14KB minified bundle with no framework dependency
 - Security boundary: widget DOM is inaccessible to host page scripts
 - Drop-in embed: `<script src="widget.js" data-chatbot-id="..."></script>`
+
+### Widget Playground
+
+The dashboard includes a [live playground](/dashboard/app/playground/page.tsx) for configuring and previewing widgets before embedding:
+- Real-time color customization with preset palette and custom hex picker
+- Editable widget title, welcome message, and system prompt
+- Live preview that updates instantly as you change settings
+- One-click copy of the ready-to-paste `<script>` embed snippet
+
+![Widget Playground](docs/screenshots/playground.png)
 
 ## For Hiring Managers
 
@@ -209,7 +205,7 @@ The embeddable chat widget uses Shadow DOM for complete isolation:
 
 ## Live Demo
 
-- **Dashboard**: [dashboard-mu-two-10.vercel.app](https://dashboard-mu-two-10.vercel.app) — "Try Demo" button on the login page (no account needed)
+- **Dashboard**: [chatbot-widget-dashboard.vercel.app](https://chatbot-widget-dashboard.vercel.app) — "Try Demo" button on the login page (no account needed)
 - **Widget demo page**: `GET /demo` — portfolio-quality showcase with live widget, copy-paste embed snippet, and cold-start indicator
 
 ### Dashboard Login (with demo button)
@@ -273,13 +269,13 @@ Visit `http://localhost:8000/widget/demo` to see the widget in action.
 ## Tests
 
 ```bash
-# Python (139 tests)
+# Python
 pytest tests/ -v
 
-# Dashboard TypeScript (9 tests)
+# Dashboard TypeScript (13 tests)
 cd dashboard && npm test
 
-# Total: 148 tests
+# Total: 161 tests
 ```
 
 ## Widget Embed Options

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, MessageCircle, ChevronDown, ChevronRight, User, Bot } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
@@ -9,7 +9,6 @@ import type { Conversation, ConversationMessage } from '@/lib/types'
 
 export default function ConversationsPage() {
   const params = useParams()
-  const router = useRouter()
   const chatbotId = params.id as string
 
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -20,17 +19,11 @@ export default function ConversationsPage() {
   const [loadingMessages, setLoadingMessages] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     apiFetch<Conversation[]>(`/api/v1/chatbots/${chatbotId}/conversations`)
       .then(setConversations)
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load conversations'))
       .finally(() => setLoading(false))
-  }, [chatbotId, router])
+  }, [chatbotId])
 
   async function toggleConversation(convId: string) {
     if (expandedId === convId) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Upload, FileText, Trash2 } from 'lucide-react'
 import { apiFetch, apiUpload } from '@/lib/api'
@@ -9,7 +9,6 @@ import type { Document } from '@/lib/types'
 
 export default function KnowledgePage() {
   const params = useParams()
-  const router = useRouter()
   const chatbotId = params.id as string
 
   const [documents, setDocuments] = useState<Document[]>([])
@@ -30,13 +29,8 @@ export default function KnowledgePage() {
   }, [chatbotId])
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
     fetchDocuments()
-  }, [router, fetchDocuments])
+  }, [fetchDocuments])
 
   async function handleUpload(files: FileList | null) {
     if (!files || files.length === 0) return

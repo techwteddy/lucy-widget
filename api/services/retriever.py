@@ -1,7 +1,6 @@
 import uuid
+from sqlalchemy import Row, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from api.models.document_chunk import DocumentChunk
 
 
 async def similarity_search(
@@ -9,7 +8,7 @@ async def similarity_search(
     chatbot_id: uuid.UUID,
     top_k: int,
     db: AsyncSession,
-) -> list[tuple[DocumentChunk, float]]:
+) -> list[tuple[Row, float]]:
     """Returns (chunk, distance) pairs ordered by cosine similarity."""
     # pgvector cosine distance: 0 = identical, 2 = opposite
     result = await db.execute(
