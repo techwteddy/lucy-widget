@@ -210,7 +210,6 @@ The embeddable chat widget uses Shadow DOM for complete isolation:
 ## Live Demo
 
 - **Dashboard**: [dashboard-mu-two-10.vercel.app](https://dashboard-mu-two-10.vercel.app) — "Try Demo" button on the login page (no account needed)
-- **Widget Playground**: [dashboard-mu-two-10.vercel.app/playground](https://dashboard-mu-two-10.vercel.app/playground) — customize colors, title, and system prompt with live preview (no login needed)
 - **Widget demo page**: `GET /demo` — portfolio-quality showcase with live widget, copy-paste embed snippet, and cold-start indicator
 
 ### Dashboard Login (with demo button)
