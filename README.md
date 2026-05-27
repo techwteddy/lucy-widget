@@ -8,7 +8,7 @@
 
 # Chatbot Widget SaaS
 
-Embeddable AI chatbot with full SaaS infrastructure — auth, billing, RAG knowledge base, analytics, and a Next.js 15 dashboard. Drop a single `<script>` tag on any website and get a streaming AI chat widget backed by Claude, pgvector retrieval, and Stripe subscriptions.
+Embeddable AI chatbot with full SaaS infrastructure - auth, billing, RAG knowledge base, analytics, and a Next.js 15 dashboard. Drop a single `<script>` tag on any website and get a streaming AI chat widget backed by Claude, pgvector retrieval, and Stripe subscriptions.
 
 ```html
 <script src="https://your-api.com/widget/chatbot.min.js"
@@ -205,8 +205,8 @@ The dashboard includes a [live playground](/dashboard/app/playground/page.tsx) f
 
 ## Live Demo
 
-- **Dashboard**: [chatbot-widget-dashboard.vercel.app](https://chatbot-widget-dashboard.vercel.app) — "Try Demo" button on the login page (no account needed)
-- **Widget demo page**: `GET /demo` — portfolio-quality showcase with live widget, copy-paste embed snippet, and cold-start indicator
+- **Dashboard**: [chatbot-widget-dashboard.vercel.app](https://chatbot-widget-dashboard.vercel.app) - "Try Demo" button on the login page (no account needed)
+- **Widget demo page**: `GET /demo` - portfolio-quality showcase with live widget, copy-paste embed snippet, and cold-start indicator
 
 ### Dashboard Login (with demo button)
 ![Dashboard Login](docs/screenshots/dashboard-login.png)
