@@ -11,3 +11,6 @@ uploads/
 dashboard/node_modules/
 dashboard/.next/
 widget/node_modules/
+
+# github-maintainer skill artifacts
+.maintenance/

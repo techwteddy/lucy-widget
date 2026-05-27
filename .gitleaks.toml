@@ -1,0 +1,20 @@
+title = "chatbot-widget gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = """
+Next.js auto-generates encryption / previewMode keys inside .next/ at build time. The dashboard/.next/ tree is gitignored (not tracked), but gitleaks scans local untracked files by default. Suppressing these paths avoids false positives without affecting tracked secrets scanning.
+"""
+paths = [
+  '''dashboard/\.next/''',
+]
+
+[[allowlists]]
+description = """
+The CI workflow ci.yml uses literal placeholder strings as env values for the test pytest run (Stripe / Supabase / JWT). These strings are not real credentials. Suppressing the file for stripe-access-token + generic-api-key rules avoids flagging the placeholders. Tracked real secrets are kept in repo settings as GitHub Actions secrets and accessed via secrets.* in ci.yml; those are out-of-band of source files.
+"""
+paths = [
+  '''\.github/workflows/ci\.yml''',
+]
