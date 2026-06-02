@@ -33,8 +33,8 @@ graph TB
         API --- RAG
     end
 
-    RAG --> PG[("PostgreSQL 16 + pgvector\n768-dim Gemini Embeddings")]
-    RAG --> Redis[("Redis 7\nSessions · Quotas · Plans")]
+    RAG --> PG[("PostgreSQL 16 + pgvector<br/>768-dim Gemini Embeddings")]
+    RAG --> Redis[("Redis 7<br/>Sessions · Quotas · Plans")]
     RAG --> Claude["Claude Sonnet + Gemini Embedding API"]
 ```
 
@@ -293,17 +293,6 @@ cd dashboard && npm test
 1. Connect this repo to [Render](https://render.com)
 2. Use `render.yaml` -- provisions API, PostgreSQL, and Redis automatically
 3. Set environment variables in the Render dashboard
-
-## Certifications Applied
-
-Skills from completed certifications applied in this project:
-
-| Domain Pillar | Certifications | Applied In |
-|--------------|----------------|------------|
-| GenAI & LLM Engineering | Google Generative AI, Anthropic Prompt Engineering, DeepLearning.AI | Claude Haiku/Gemini Flash chat completion, KB semantic search |
-| RAG & Knowledge Systems | DeepLearning.AI RAG, LangChain & Vector DBs | pgvector semantic search, multi-tenant KB with quota enforcement |
-| Cloud & MLOps | Google Cloud, IBM DevOps, GitHub Actions | Render Blueprint deploy, Redis caching, CI coverage + security gates |
-| Deep Learning & AI Foundations | DeepLearning.AI specializations | Embedding model selection, vector similarity scoring |
 
 ## License
 
