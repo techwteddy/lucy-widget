@@ -1,2 +1,326 @@
 version: 1
-items: []
+tasks:
+  - id: task_001
+    title: Create separate Supabase project for Lucy
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:42.675Z
+    updated_at: 2026-06-18T22:07:42.675Z
+  - id: task_002
+    title: Fill in .env with real API keys
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:43.705Z
+    updated_at: 2026-06-18T22:07:43.705Z
+  - id: task_003
+    title: Install Python 3.12 and create virtual environment
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:44.798Z
+    updated_at: 2026-06-18T22:07:44.798Z
+  - id: task_004
+    title: Run database migrations with Alembic
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:45.873Z
+    updated_at: 2026-06-18T22:07:45.873Z
+  - id: task_005
+    title: Test FastAPI backend locally
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:46.906Z
+    updated_at: 2026-06-18T22:07:46.906Z
+  - id: task_006
+    title: Write SOUL.md for Nice Braids
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:47.940Z
+    updated_at: 2026-06-18T22:07:47.940Z
+  - id: task_007
+    title: Write SOUL.md for G&M Auto
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:49.003Z
+    updated_at: 2026-06-18T22:07:49.003Z
+  - id: task_008
+    title: Write SOUL.md for mukeracare
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:50.095Z
+    updated_at: 2026-06-18T22:07:50.095Z
+  - id: task_009
+    title: Deploy backend to Railway
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:51.180Z
+    updated_at: 2026-06-18T22:07:51.180Z
+  - id: task_010
+    title: Deploy dashboard to Vercel
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:52.247Z
+    updated_at: 2026-06-18T22:07:52.247Z
+  - id: task_011
+    title: Point lucy.dinqdigital.com to deployment
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:53.368Z
+    updated_at: 2026-06-18T22:07:53.368Z
+  - id: task_012
+    title: Embed Lucy Widget on dinqdigital.com
+    source_links: []
+    status: ready
+    priority: P2
+    labels: []
+    repo_targets: []
+    acceptance_criteria: []
+    dependencies: []
+    planning:
+      split_status: pending
+      risk: medium
+    execution_defaults:
+      manual_approval_required: false
+      auto_commit: true
+      push_when_done: true
+      create_pr: false
+      merge_pr: false
+      worktree_mode: direct
+      preferred_agents: []
+      max_subagents: 5
+    sync:
+      source_of_truth: backlog
+      push_status: false
+      push_comments: false
+    created_at: 2026-06-18T22:07:54.459Z
+    updated_at: 2026-06-18T22:07:54.459Z
