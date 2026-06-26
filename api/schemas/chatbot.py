@@ -9,7 +9,7 @@ class ChatbotCreate(BaseModel):
     welcome_message: str = "Hi! How can I help you today?"
     primary_color: str = "#3B82F6"
     position: str = "bottom-right"
-    title: str = "Chat with us"
+    title: str = "Chat with Lucy"
     owner_email: Optional[str] = None
 
 

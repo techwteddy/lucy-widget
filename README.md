@@ -6,16 +6,16 @@
 ![CI](https://github.com/ChunkyTortoise/chatbot-widget/actions/workflows/ci.yml/badge.svg)
 [![Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen)](https://chatbot-widget-dashboard.vercel.app)
 
-# Chatbot Widget SaaS
+# DinqAgent — Powered by Lucy
 
 Embeddable AI chatbot with full SaaS infrastructure - auth, billing, RAG knowledge base, analytics, and a Next.js 15 dashboard. Drop a single `<script>` tag on any website and get a streaming AI chat widget backed by Claude, pgvector retrieval, and Stripe subscriptions.
 
 ```html
-<script src="https://your-api.com/widget/chatbot.min.js"
+<script src="https://dinqagent.dinqdigital.com/widget/lucy.min.js"
         data-chatbot-id="YOUR_CHATBOT_ID"
         data-api-key="YOUR_API_KEY"
         data-primary-color="#2563EB"
-        data-title="Chat with us"></script>
+        data-title="Chat with Lucy"></script>
 ```
 
 ---
@@ -286,7 +286,7 @@ cd dashboard && npm test
 | `data-api-key` | -- | API key for authenticated access |
 | `data-position` | `bottom-right` | `bottom-right` or `bottom-left` |
 | `data-primary-color` | `#2563EB` | Hex color for bubble and header |
-| `data-title` | `Chat with us` | Header title text |
+| `data-title` | `Chat with Lucy` | Header title text |
 
 ## Deploy to Render
 

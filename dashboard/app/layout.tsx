@@ -8,7 +8,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Chatbot Widget Dashboard',
+  title: 'DinqAgent by Dinq Digital',
   description: 'Embed AI chat on any website in 60 seconds',
 }
 
@@ -23,7 +23,7 @@ export default function RootLayout({
         <header className="border-b border-border bg-card">
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
             <Link href="/" className="text-lg font-semibold text-foreground">
-              ChatWidget
+              DinqAgent by Dinq Digital
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

@@ -1,7 +1,7 @@
 version: 1
 tasks:
   - id: task_001
-    title: Create separate Supabase project for Lucy
+    title: Create separate Supabase project for DinqAgent
     source_links: []
     status: ready
     priority: P2
@@ -136,7 +136,7 @@ tasks:
     created_at: 2026-06-18T22:07:46.906Z
     updated_at: 2026-06-18T22:07:46.906Z
   - id: task_006
-    title: Write SOUL.md for Nice Braids
+    title: Write SOUL.md for Nice Braids (DinqBeauty)
     source_links: []
     status: ready
     priority: P2
@@ -163,7 +163,7 @@ tasks:
     created_at: 2026-06-18T22:07:47.940Z
     updated_at: 2026-06-18T22:07:47.940Z
   - id: task_007
-    title: Write SOUL.md for G&M Auto
+    title: Write SOUL.md for G&M Auto (DinqAuto)
     source_links: []
     status: ready
     priority: P2
@@ -190,7 +190,7 @@ tasks:
     created_at: 2026-06-18T22:07:49.003Z
     updated_at: 2026-06-18T22:07:49.003Z
   - id: task_008
-    title: Write SOUL.md for mukeracare
+    title: Write SOUL.md for mukeracare (DinqCare)
     source_links: []
     status: ready
     priority: P2
@@ -271,7 +271,7 @@ tasks:
     created_at: 2026-06-18T22:07:52.247Z
     updated_at: 2026-06-18T22:07:52.247Z
   - id: task_011
-    title: Point lucy.dinqdigital.com to deployment
+    title: Point dinqagent.dinqdigital.com to deployment
     source_links: []
     status: ready
     priority: P2
@@ -298,7 +298,7 @@ tasks:
     created_at: 2026-06-18T22:07:53.368Z
     updated_at: 2026-06-18T22:07:53.368Z
   - id: task_012
-    title: Embed Lucy Widget on dinqdigital.com
+    title: Embed DinqAgent widget on dinqdigital.com
     source_links: []
     status: ready
     priority: P2

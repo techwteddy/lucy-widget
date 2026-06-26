@@ -7,7 +7,7 @@
   const API_KEY = script.getAttribute('data-api-key') || '';
   const POSITION = script.getAttribute('data-position') || 'bottom-right';
   const PRIMARY_COLOR = script.getAttribute('data-primary-color') || '#3B82F6';
-  const TITLE = script.getAttribute('data-title') || 'Chat with us';
+  const TITLE = script.getAttribute('data-title') || 'Chat with Lucy';
 
   // Auto-detect API host from script src
   const API_HOST = (() => {

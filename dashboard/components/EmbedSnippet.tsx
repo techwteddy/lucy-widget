@@ -13,8 +13,8 @@ interface EmbedSnippetProps {
 export function EmbedSnippet({ chatbotId, apiKey, primaryColor, title }: EmbedSnippetProps) {
   const [copied, setCopied] = useState(false)
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-  const snippet = `<script src="${apiUrl}/widget/chatbot.min.js"
+  const embedScriptUrl = 'https://dinqagent.dinqdigital.com/widget/lucy.min.js'
+  const snippet = `<script src="${embedScriptUrl}"
   data-chatbot-id="${chatbotId}"${apiKey ? `\n  data-api-key="${apiKey}"` : ''}${primaryColor ? `\n  data-primary-color="${primaryColor}"` : ''}${title ? `\n  data-title="${title}"` : ''}></script>`
 
   async function handleCopy() {

@@ -24,7 +24,7 @@ const mockChatbot: Chatbot = {
   welcome_message: 'Hello!',
   primary_color: '#3B82F6',
   position: 'bottom-right',
-  title: 'Chat with us',
+  title: 'Chat with Lucy',
   owner_email: 'test@example.com',
   is_active: true,
 }

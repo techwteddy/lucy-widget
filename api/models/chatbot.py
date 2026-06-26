@@ -15,7 +15,7 @@ class Chatbot(Base, UUIDMixin, TimestampMixin):
     )
     primary_color: Mapped[str] = mapped_column(String(7), default="#3B82F6")
     position: Mapped[str] = mapped_column(String(20), default="bottom-right")
-    title: Mapped[str] = mapped_column(String(100), default="Chat with us")
+    title: Mapped[str] = mapped_column(String(100), default="Chat with Lucy")
     api_key_hash: Mapped[str] = mapped_column(String(200), nullable=False)
     owner_email: Mapped[str | None] = mapped_column(String(200))
     owner_id: Mapped[uuid.UUID | None] = mapped_column(

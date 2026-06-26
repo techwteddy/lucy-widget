@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting Chatbot Widget API...")
+    logger.info("Starting DinqAgent API...")
     async with engine.begin() as conn:
         # Ensure pgvector extension exists (handled by migration in prod)
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
@@ -31,8 +31,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Chatbot Widget API",
-    description="Embeddable AI chatbot widget backend",
+    title="DinqAgent API",
+    description="DinqAgent embeddable AI chat widget backend",
     version="1.0.0",
     lifespan=lifespan,
 )

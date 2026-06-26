@@ -2,14 +2,14 @@ import os
 import streamlit as st
 import httpx
 
-st.set_page_config(page_title="Chatbot Widget Admin", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="DinqAgent Admin", page_icon="🤖", layout="wide")
 
 # Config from env or sidebar
 API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "")
 
 # Sidebar
-st.sidebar.title("🤖 Chatbot Widget Admin")
+st.sidebar.title("🤖 DinqAgent Admin")
 api_url = st.sidebar.text_input("API URL", value=API_BASE)
 admin_key = st.sidebar.text_input("Admin Key", value=ADMIN_KEY, type="password")
 
@@ -81,7 +81,7 @@ with tab1:
             )
             welcome = st.text_input("Welcome Message", value="Hi! How can I help you today?")
             color = st.color_picker("Primary Color", value="#3B82F6")
-            title = st.text_input("Chat Title", value="Chat with us")
+            title = st.text_input("Chat Title", value="Chat with Lucy")
             position = st.selectbox("Position", ["bottom-right", "bottom-left"])
             owner_email = st.text_input("Owner Email (optional)")
 
@@ -195,13 +195,13 @@ with tab3:
     )
     embed_api_key = st.text_input("API Key (from creation)", placeholder="cbk_...", type="password")
     embed_color = st.color_picker("Primary Color", value="#3B82F6", key="embed_color")
-    embed_title = st.text_input("Chat Title", value="Chat with us", key="embed_title")
+    embed_title = st.text_input("Chat Title", value="Chat with Lucy", key="embed_title")
     embed_pos = st.selectbox("Position", ["bottom-right", "bottom-left"], key="embed_pos")
-    embed_host = st.text_input("API Host", value="https://chatbot-widget-api.onrender.com")
+    embed_host = st.text_input("API Host", value="https://dinqagent.dinqdigital.com")
 
     if embed_id:
         embed_code = f"""<!-- Paste this before </body> on your website -->
-<script src="{embed_host}/widget/chatbot.min.js"
+<script src="{embed_host}/widget/lucy.min.js"
         data-chatbot-id="{embed_id}"
         data-api-key="{embed_api_key}"
         data-position="{embed_pos}"

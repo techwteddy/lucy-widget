@@ -14,7 +14,7 @@ export default function NewChatbotPage() {
   const [systemPrompt, setSystemPrompt] = useState('You are a helpful assistant for our website visitors.')
   const [welcomeMessage, setWelcomeMessage] = useState('Hi! How can I help you today?')
   const [primaryColor, setPrimaryColor] = useState('#3B82F6')
-  const [title, setTitle] = useState('Chat with us')
+  const [title, setTitle] = useState('Chat with Lucy')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
